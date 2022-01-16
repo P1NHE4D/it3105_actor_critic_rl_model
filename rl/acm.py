@@ -50,7 +50,7 @@ class ACM:
                 episode.append((current_state, current_action))
                 successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
                 successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
-                actor.eligibilities[(current_state.__hash__(), current_action)] = 1
+                actor.eligibilities[(current_state, current_action)] = 1
                 td_error = critic.compute_td_error(
                     current_state=current_state,
                     successor_state=successor_state,
@@ -82,9 +82,9 @@ class TableBasedActor:
         self.policy = dict()
         self.eligibilities = dict()
         for state in states:
-            for action in state.actions():
-                self.policy[(state.__hash__(), action)] = 0
-                self.eligibilities[(state.__hash__(), action)] = 0
+            for action in state.actions:
+                self.policy[(state, action)] = 0
+                self.eligibilities[(state, action)] = 0
 
     def reset_eligibilities(self):
         for state_action in self.eligibilities:
@@ -98,11 +98,11 @@ class TableBasedActor:
         :return: an action
         """
         if np.random.choice(np.array([0, 1]), p=[1 - epsilon, epsilon]) == 1:
-            return np.random.choice(np.array(state.actions()))
+            return np.random.choice(np.array(state.actions))
         best_action = None
         max_value = -math.inf
         for action in state.actions:
-            state_value = self.policy[(state.__hash__(), action)] / len(state.actions())
+            state_value = self.policy[(state, action)] / len(state.actions)
             if state_value > max_value:
                 best_action = action
                 max_value = state_value
@@ -117,7 +117,7 @@ class TableBasedActor:
         :param learning_rate: learning rate
         :param td_error: temporal difference error computed by the critic
         """
-        self.policy[(state.__hash__(), action)] += learning_rate * td_error * self.eligibilities[(state.__hash__(), action)]
+        self.policy[(state, action)] += learning_rate * td_error * self.eligibilities[(state, action)]
 
     def update_eligibilities(self, state, action, discount_rate, decay_factor):
         """
@@ -129,7 +129,7 @@ class TableBasedActor:
         :param discount_rate: discount rate
         :param decay_factor: decay factor of eligibility
         """
-        self.eligibilities[(state.__hash__(), action)] *= discount_rate * decay_factor
+        self.eligibilities[(state, action)] *= discount_rate * decay_factor
 
 
 class TableBasedCritic:
@@ -139,8 +139,8 @@ class TableBasedCritic:
         self.state_values = dict()
         self.eligibilities = dict()
         for state in states:
-            self.state_values[state.__hash__()] = np.random.uniform()
-            self.eligibilities[state.__hash__()] = 0
+            self.state_values[state] = np.random.uniform()
+            self.eligibilities[state] = 0
 
     def reset_eligibilities(self):
         """
@@ -154,7 +154,7 @@ class TableBasedCritic:
         computes the temporal difference error based on the reinforcement and value of a state
         :return: td error
         """
-        return reinforcement + (discount_rate * self.state_values[successor_state.__hash__()]) - self.state_values[current_state.__hash__()]
+        return reinforcement + (discount_rate * self.state_values[successor_state]) - self.state_values[current_state]
 
     def update_value_function(self, state, learning_rate, td_error):
         """
@@ -164,7 +164,7 @@ class TableBasedCritic:
         :param learning_rate: learning rate
         :param td_error: temporal difference error
         """
-        self.state_values[state.__hash__()] += learning_rate * td_error * self.eligibilities[state.__hash__()]
+        self.state_values[state] += learning_rate * td_error * self.eligibilities[state]
 
     def update_eligibilities(self, state, discount_rate, decay_factor):
         """
@@ -174,7 +174,7 @@ class TableBasedCritic:
         :param discount_rate: discount rate
         :param decay_factor: decay factor
         """
-        self.eligibilities[state.__hash__()] *= discount_rate * decay_factor
+        self.eligibilities[state] *= discount_rate * decay_factor
 
 
 class NNBasedCritic:

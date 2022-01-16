@@ -3,13 +3,8 @@ from abc import ABC, abstractmethod
 
 class State(ABC):
 
-    @abstractmethod
-    def __hash__(self):
-        pass
-
-    @abstractmethod
-    def actions(self):
-        pass
+    def __init__(self, actions):
+        self.actions = actions
 
 
 class Domain(ABC):
