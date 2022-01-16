@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib as plt
 import math
+from tqdm import tqdm
 
 from rl.environment import Domain
 
@@ -26,12 +27,14 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor(domain.states)
+        actor = TableBasedActor()
         if self.critic_type == "table":
-            critic = TableBasedCritic(domain.states)
+            critic = TableBasedCritic()
         else:
             critic = NNBasedCritic()
-        for episode_count in range(self.max_episodes):
+        for _ in tqdm(range(self.max_episodes), desc="Episode", colour="green"):
+
+            # TODO: add visualisation
 
             # reset eligibilities
             actor.reset_eligibilities()
@@ -208,4 +211,5 @@ class TableBasedCritic:
 
 
 class NNBasedCritic:
+    # TODO: implement
     pass
