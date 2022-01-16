@@ -37,9 +37,8 @@ class ACM:
             actor.reset_eligibilities()
             critic.reset_eligibilities()
 
-            # get initial state
+            # get initial state and action
             current_state = domain.produce_initial_state()
-            # get initial action
             current_action = actor.propose_action(current_state, self.epsilon)
 
             episode = []
@@ -48,6 +47,9 @@ class ACM:
             while step < self.steps and not domain.is_terminal_state(current_state):
                 step += 1
                 episode.append((current_state, current_action))
+                actor.add_state(current_state)
+                critic.add_state(current_state)
+
                 successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
                 successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
                 actor.eligibilities[(current_state, current_action)] = 1
@@ -61,9 +63,11 @@ class ACM:
 
                 for state, action in episode:
                     critic.update_value_function(state=state, learning_rate=self.critic_lr, td_error=td_error)
-                    critic.update_eligibilities(state=state, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
+                    critic.update_eligibilities(state=state, discount_rate=self.discount_rate,
+                                                decay_factor=self.decay_factor)
                     actor.update_policy(state=state, action=action, learning_rate=self.actor_lr, td_error=td_error)
-                    actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
+                    actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate,
+                                               decay_factor=self.decay_factor)
 
                 current_state = successor_state
                 current_action = successor_action
@@ -77,12 +81,14 @@ class ACM:
 class TableBasedActor:
     # contains policy, which computes a score expressing how desirable an action is in a given state
 
-    def __init__(self, states):
+    def __init__(self):
         # maps state-action pairs to desirability value
         self.policy = dict()
         self.eligibilities = dict()
-        for state in states:
-            for action in state.actions:
+
+    def add_state(self, state):
+        for action in state.actions:
+            if (state, action) not in self.policy.keys() and (state, action) not in self.eligibilities.keys():
                 self.policy[(state, action)] = 0
                 self.eligibilities[(state, action)] = 0
 
@@ -134,11 +140,13 @@ class TableBasedActor:
 
 class TableBasedCritic:
 
-    def __init__(self, states):
+    def __init__(self, ):
         # maps states to values
         self.state_values = dict()
         self.eligibilities = dict()
-        for state in states:
+
+    def add_state(self, state):
+        if state not in self.state_values.keys() and state not in self.eligibilities.keys():
             self.state_values[state] = np.random.uniform()
             self.eligibilities[state] = 0
 

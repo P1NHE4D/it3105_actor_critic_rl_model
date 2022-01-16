@@ -9,8 +9,8 @@ class State(ABC):
 
 class Domain(ABC):
 
-    def __init__(self, states):
-        self.states = states
+    # def __init__(self, states):
+    #     self.states = states
 
     @abstractmethod
     def produce_initial_state(self):
