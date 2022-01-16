@@ -8,5 +8,7 @@
   "decay": 0.99,
   "discount": 0.8,
   "epsilon": 0.99,
-  "visualise": false
+  "epsilon_decay": 1,
+  "visualise": false,
+  "verbose": false
 }

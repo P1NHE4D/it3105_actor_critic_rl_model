@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib as plt
+import math
 
 from rl.environment import Domain
 
@@ -15,7 +16,9 @@ class ACM:
         self.decay_factor = config["decay"]
         self.discount_rate = config["discount"]
         self.epsilon = config["epsilon"]
+        self.epsilon_decay = config["epsilon_decay"]
         self.visualise = config["visualise"]
+        self.verbose = config["verbose"]
 
     def fit(self, domain: Domain):
         """
@@ -37,7 +40,7 @@ class ACM:
             # get initial state
             current_state = domain.produce_initial_state()
             # get initial action
-            current_action = actor.propose_action(current_state)
+            current_action = actor.propose_action(current_state, self.epsilon)
 
             episode = []
 
@@ -61,6 +64,8 @@ class ACM:
                 current_state = successor_state
                 current_action = successor_action
 
+            self.epsilon *= self.epsilon_decay
+
     def predict(self):
         pass
 
@@ -81,19 +86,30 @@ class TableBasedActor:
         for state_action in self.eligibilities:
             self.eligibilities[state_action] = 0
 
-    def propose_action(self, state):
+    def propose_action(self, state, epsilon):
         """
         proposes an action in a given state based on the desirability determined by the policy
         :param state: state object for which an action should be selected
+        :param epsilon: probability for selecting a random action
         :return: an action
         """
-        pass
+        if np.random.choice(np.array([0, 1]), p=[1 - epsilon, epsilon]) == 1:
+            return np.random.choice(np.array(state.actions()))
+        best_action = None
+        max_value = -math.inf
+        for action in state.actions:
+            state_value = self.policy[state.__hash__(), action]
+            if state_value > max_value:
+                best_action = action
+                max_value = state_value
+        return best_action
 
     def update_policy(self, td_error):
         """
         Updates the policy using the td error computed by the critic
         :param td_error: temporal difference error computed by the critic
         """
+        # TODO: normalise values of each state across the number of actions that can be taken in a given state
         pass
 
     def update_eligibilities(self):
