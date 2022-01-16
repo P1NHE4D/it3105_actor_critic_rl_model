@@ -49,14 +49,19 @@ class ACM:
                 step += 1
                 episode.append((current_state, current_action))
                 successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
-                successor_action = actor.propose_action(successor_state)
+                successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
                 actor.eligibilities[(current_state.__hash__(), current_action)] = 1
-                td_error = critic.compute_td_error()
+                td_error = critic.compute_td_error(
+                    current_state=current_state,
+                    successor_state=successor_state,
+                    reinforcement=reinforcement,
+                    discount_rate=self.discount_rate
+                )
                 critic.eligibilities[current_state] = 1
 
                 for state, action in episode:
-                    critic.update_value_function()
-                    critic.eligibilities[state] = self.discount_rate * self.decay_factor * critic.eligibilities[state]
+                    critic.update_value_function(state=state, learning_rate=self.critic_lr, td_error=td_error)
+                    critic.update_eligibilities(state=state, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
                     actor.update_policy(state=state, action=action, learning_rate=self.actor_lr, td_error=td_error)
                     actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
 
@@ -138,21 +143,38 @@ class TableBasedCritic:
             self.eligibilities[state.__hash__()] = 0
 
     def reset_eligibilities(self):
+        """
+        Resets all eligibilities to 0
+        """
         for state in self.eligibilities:
             self.eligibilities[state] = 0
 
-    def compute_td_error(self):
+    def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
         """
         computes the temporal difference error based on the reinforcement and value of a state
         :return: td error
         """
-        pass
+        return reinforcement + (discount_rate * self.state_values[successor_state.__hash__()]) - self.state_values[current_state.__hash__()]
 
-    def update_value_function(self):
-        pass
+    def update_value_function(self, state, learning_rate, td_error):
+        """
+        Updates the value of the given state based on td_error and the learning_rate
 
-    def update_eligibilities(self):
-        pass
+        :param state: state for which the value should be updated
+        :param learning_rate: learning rate
+        :param td_error: temporal difference error
+        """
+        self.state_values[state.__hash__()] += learning_rate * td_error * self.eligibilities[state.__hash__()]
+
+    def update_eligibilities(self, state, discount_rate, decay_factor):
+        """
+        Updates the eligibility traces of the given state using the given discount rate and decay factor
+
+        :param state: state for which the eligibility should be updated
+        :param discount_rate: discount rate
+        :param decay_factor: decay factor
+        """
+        self.eligibilities[state.__hash__()] *= discount_rate * decay_factor
 
 
 class NNBasedCritic:
