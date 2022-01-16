@@ -3,10 +3,6 @@ from rl.environment import Domain, State
 
 class PoleBalancing(Domain):
 
-    def __init__(self):
-        states = []
-        super().__init__(states)
-
     def produce_initial_state(self):
         pass
 
@@ -18,8 +14,6 @@ class PoleBalancing(Domain):
 
 
 class PoleBalancingState(State):
-    def __hash__(self):
-        pass
 
     def actions(self):
         pass
