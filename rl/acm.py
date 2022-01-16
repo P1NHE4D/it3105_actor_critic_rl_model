@@ -41,18 +41,26 @@ class ACM:
             current_state = domain.produce_initial_state()
             current_action = actor.propose_action(current_state, self.epsilon)
 
+            # initialise an empty episode
             episode = []
 
             step = 0
             while step < self.steps and not domain.is_terminal_state(current_state):
                 step += 1
+
+                # append the current state-action pair to the current episode and initialise required values
+                # in the actor and critic
                 episode.append((current_state, current_action))
                 actor.add_state(current_state)
                 critic.add_state(current_state)
 
+                # obtain a successor state and the reinforcement from moving to that state from the domain
                 successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
+                # determine the best action from the successor based on the current policy
                 successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
+                # increase the eligibility of the current state
                 actor.eligibilities[(current_state, current_action)] = 1
+                # compute the td error using the current and the successor state
                 td_error = critic.compute_td_error(
                     current_state=current_state,
                     successor_state=successor_state,
@@ -61,6 +69,7 @@ class ACM:
                 )
                 critic.eligibilities[current_state] = 1
 
+                # update the value function, eligibilities, and the policy for each state of the current episode
                 for state, action in episode:
                     critic.update_value_function(state=state, learning_rate=self.critic_lr, td_error=td_error)
                     critic.update_eligibilities(state=state, discount_rate=self.discount_rate,
