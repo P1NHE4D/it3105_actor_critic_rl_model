@@ -87,12 +87,20 @@ class TableBasedActor:
         self.eligibilities = dict()
 
     def add_state(self, state):
+        """
+        Adds the given state to the state-action dictionary
+
+        :param state: state to be added
+        """
         for action in state.actions:
             if (state, action) not in self.policy.keys() and (state, action) not in self.eligibilities.keys():
                 self.policy[(state, action)] = 0
                 self.eligibilities[(state, action)] = 0
 
     def reset_eligibilities(self):
+        """
+        Resets the eligibility for every state-action pair to 0
+        """
         for state_action in self.eligibilities:
             self.eligibilities[state_action] = 0
 
@@ -146,6 +154,11 @@ class TableBasedCritic:
         self.eligibilities = dict()
 
     def add_state(self, state):
+        """
+        Adds the given state to the state-value dict
+
+        :param state: state to be added
+        """
         if state not in self.state_values.keys() and state not in self.eligibilities.keys():
             self.state_values[state] = np.random.uniform()
             self.eligibilities[state] = 0
