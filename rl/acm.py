@@ -54,12 +54,11 @@ class ACM:
                 td_error = critic.compute_td_error()
                 critic.eligibilities[current_state] = 1
 
-                for state_action in episode:
+                for state, action in episode:
                     critic.update_value_function()
-                    critic.eligibilities[state_action[0]] = self.discount_rate * self.decay_factor * critic.eligibilities[state_action[0]]
-                    actor.update_policy(td_error)
-                    actor.eligibilities[state_action] = self.discount_rate * self.decay_factor * actor.eligibilities[
-                        state_action]
+                    critic.eligibilities[state] = self.discount_rate * self.decay_factor * critic.eligibilities[state]
+                    actor.update_policy(state=state, action=action, learning_rate=self.actor_lr, td_error=td_error)
+                    actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
 
                 current_state = successor_state
                 current_action = successor_action
@@ -98,22 +97,34 @@ class TableBasedActor:
         best_action = None
         max_value = -math.inf
         for action in state.actions:
-            state_value = self.policy[state.__hash__(), action]
+            state_value = self.policy[(state.__hash__(), action)] / len(state.actions())
             if state_value > max_value:
                 best_action = action
                 max_value = state_value
         return best_action
 
-    def update_policy(self, td_error):
+    def update_policy(self, state, action, learning_rate, td_error):
         """
         Updates the policy using the td error computed by the critic
+
+        :param state: state for which the policy should be updated
+        :param action: corresponding action of the state
+        :param learning_rate: learning rate
         :param td_error: temporal difference error computed by the critic
         """
-        # TODO: normalise values of each state across the number of actions that can be taken in a given state
-        pass
+        self.policy[(state.__hash__(), action)] += learning_rate * td_error * self.eligibilities[(state.__hash__(), action)]
 
-    def update_eligibilities(self):
-        pass
+    def update_eligibilities(self, state, action, discount_rate, decay_factor):
+        """
+        Updates the eligibilities for the given state-action pair based on the discount rate and
+        decay factor.
+
+        :param state: state for which the eligibility should be updated
+        :param action: corresponding action of the state
+        :param discount_rate: discount rate
+        :param decay_factor: decay factor of eligibility
+        """
+        self.eligibilities[(state.__hash__(), action)] *= discount_rate * decay_factor
 
 
 class TableBasedCritic:
