@@ -3,6 +3,9 @@ from rl.environment import Domain, State
 
 class TowersOfHanoi(Domain):
 
+    def __init__(self, config):
+        pass
+
     def produce_initial_state(self):
         pass
 
@@ -15,5 +18,6 @@ class TowersOfHanoi(Domain):
 
 class TowersOfHanoiState(State):
 
-    def actions(self):
-        pass
+    def __init__(self, actions):
+        super().__init__(actions)
+
