@@ -81,12 +81,13 @@ class PoleBalancing(Domain):
         timestep = state.timestep + 1
 
         # compute reinforcement
+        # TODO: needs to be optimised
         if np.abs(pole_angle) > self.pole_angle_magnitude and timestep < self.max_timesteps:
-            reinforcement = -1
+            reinforcement = -10
         elif timestep >= self.max_timesteps:
-            reinforcement = 1
+            reinforcement = 10
         else:
-            reinforcement = 0
+            reinforcement = timestep * 0.01
 
         return PoleBalancingState(
             pole_angle=pole_angle,
