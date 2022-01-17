@@ -43,6 +43,8 @@ class ACM:
             # get initial state and action
             current_state = domain.produce_initial_state()
             current_action = actor.propose_action(current_state, self.epsilon)
+            actor.add_state(current_state)
+            critic.add_state(current_state)
 
             # initialise an empty episode
             episode = []
@@ -54,11 +56,14 @@ class ACM:
                 # append the current state-action pair to the current episode and initialise required values
                 # in the actor and critic
                 episode.append((current_state, current_action))
-                actor.add_state(current_state)
-                critic.add_state(current_state)
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
                 successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
+
+                # add successor states to actor and critic
+                actor.add_state(successor_state)
+                critic.add_state(successor_state)
+
                 # determine the best action from the successor based on the current policy
                 successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
                 # increase the eligibility of the current state
@@ -105,8 +110,9 @@ class TableBasedActor:
         :param state: state to be added
         """
         for action in state.actions:
-            if (state, action) not in self.policy.keys() and (state, action) not in self.eligibilities.keys():
+            if (state, action) not in self.policy.keys():
                 self.policy[(state, action)] = 0
+            if (state, action) not in self.eligibilities.keys():
                 self.eligibilities[(state, action)] = 0
 
     def reset_eligibilities(self):
@@ -171,8 +177,9 @@ class TableBasedCritic:
 
         :param state: state to be added
         """
-        if state not in self.state_values.keys() and state not in self.eligibilities.keys():
+        if state not in self.state_values.keys():
             self.state_values[state] = np.random.uniform()
+        if state not in self.eligibilities.keys():
             self.eligibilities[state] = 0
 
     def reset_eligibilities(self):

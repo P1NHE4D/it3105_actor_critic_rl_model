@@ -6,7 +6,7 @@ import json
 
 
 def main():
-    with open("../config.json") as f:
+    with open("config.json") as f:
         config = json.load(f)
     acm = ACM(config)
     acm.fit(PoleBalancing(config["pole_balancing"]))
