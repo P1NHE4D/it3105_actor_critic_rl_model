@@ -9,9 +9,9 @@ def main():
     with open("../config.json") as f:
         config = json.load(f)
     acm = ACM(config)
-    acm.fit(PoleBalancing())
-    acm.fit(TowersOfHanoi())
-    acm.fit(Gambler())
+    acm.fit(PoleBalancing(config["pole_balancing"]))
+    # acm.fit(TowersOfHanoi())
+    # acm.fit(Gambler())
 
 
 if __name__ == '__main__':

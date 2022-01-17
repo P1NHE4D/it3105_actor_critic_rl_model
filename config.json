@@ -1,6 +1,6 @@
 {
-  "episodes": 10,
-  "steps": 1000,
+  "episodes": 200,
+  "steps": 300,
   "critic_type": "table",
   "critic_nn_dims": [15, 20, 30, 5, 1],
   "actor_lr": 0.01,
@@ -10,5 +10,17 @@
   "epsilon": 0.99,
   "epsilon_decay": 1,
   "visualise": false,
-  "verbose": false
+  "verbose": false,
+  "pole_balancing": {
+    "pole_length": 0.5,
+    "pole_mass": 0.1,
+    "cart_mass": 1,
+    "gravity": 9.8,
+    "force": 10,
+    "pole_angle_magnitude": 0.21,
+    "left_cart_bound": -2.4,
+    "right_cart_bound": -2.4,
+    "sim_timestep": 0.02,
+    "max_timesteps": 300
+  }
 }
