@@ -1,5 +1,8 @@
 from rl.environment import Domain, State
 
+# TODO question: 
+# > For example, the 3-peg, 4-disc problem requires a minimum of 15 moves.
+# does that mean we should support an initial state that is not cone shaped?
 
 class TowersOfHanoi(Domain):
 

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib as plt
 import math
 from tqdm import tqdm
+from pprint import pprint
 
 from rl.environment import Domain
 
@@ -27,7 +28,7 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor()
+        actor = TableBasedActor(domain.get_possible_actions())
         if self.critic_type == "table":
             critic = TableBasedCritic()
         else:
@@ -60,7 +61,7 @@ class ACM:
             episode = []
 
             step = 0
-            while step < self.steps and not domain.is_terminal_state(current_state):
+            while step < self.steps and not domain.is_current_state_final_state():
                 step += 1
 
                 # append the current state-action pair to the current episode and initialise required values
@@ -68,7 +69,7 @@ class ACM:
                 episode.append((current_state, current_action))
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
-                successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
+                successor_state, reinforcement = domain.generate_all_child_states_of_the_current_state(current_action)
 
                 # add successor states to actor and critic
                 actor.add_state(successor_state)
@@ -100,18 +101,26 @@ class ACM:
                 current_action = successor_action
 
             self.epsilon *= self.epsilon_decay
+        
+        pprint(actor.policy)
+        
+        self.actor = actor
+        self.critic = critic
 
-    def predict(self):
-        pass
-
+    def predict(self, domain: Domain):
+        current_state = domain.produce_initial_state()
+        while not domain.is_current_state_final_state():
+            current_action = self.actor.propose_action(current_state, 0)
+            current_state, _ = domain.generate_all_child_states_of_the_current_state(current_action)
 
 class TableBasedActor:
     # contains policy, which computes a score expressing how desirable an action is in a given state
 
-    def __init__(self):
+    def __init__(self, actions):
         # maps state-action pairs to desirability value
         self.policy = dict()
         self.eligibilities = dict()
+        self.actions = actions
 
     def add_state(self, state):
         """
@@ -119,7 +128,7 @@ class TableBasedActor:
 
         :param state: state to be added
         """
-        for action in state.actions:
+        for action in self.actions:
             if (state, action) not in self.policy.keys():
                 self.policy[(state, action)] = 0
             if (state, action) not in self.eligibilities.keys():
@@ -140,11 +149,13 @@ class TableBasedActor:
         :return: an action
         """
         if np.random.choice(np.array([0, 1]), p=[1 - epsilon, epsilon]) == 1:
-            return np.random.choice(np.array(state.actions))
+            return self.actions[np.random.choice(len(self.actions))]
         best_action = None
         max_value = -math.inf
-        for action in state.actions:
-            state_value = self.policy[(state, action)] / len(state.actions)
+        for action in self.actions:
+            if not (state, action) in self.policy:
+                self.add_state(state)
+            state_value = self.policy[(state, action)] / len(self.actions)
             if state_value > max_value:
                 best_action = action
                 max_value = state_value
@@ -188,7 +199,9 @@ class TableBasedCritic:
         :param state: state to be added
         """
         if state not in self.state_values.keys():
-            self.state_values[state] = np.random.uniform()
+            #self.state_values[state] = np.random.uniform()
+            # 0 for easier debugging
+            self.state_values[state] = 0
         if state not in self.eligibilities.keys():
             self.eligibilities[state] = 0
 

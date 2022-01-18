@@ -14,9 +14,13 @@ class Domain(ABC):
         pass
 
     @abstractmethod
-    def generate_child_state(self, state: State, action):
+    def generate_all_child_states_of_the_current_state(self, action):
         pass
 
     @abstractmethod
-    def is_terminal_state(self, state: State):
+    def is_current_state_final_state(self, state: State):
+        pass
+
+    @abstractmethod
+    def get_possible_actions(self):
         pass
