@@ -6,6 +6,14 @@ class State(ABC):
     def __init__(self, actions):
         self.actions = actions
 
+    @abstractmethod
+    def __hash__(self):
+        pass
+
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
 
 class Domain(ABC):
 
