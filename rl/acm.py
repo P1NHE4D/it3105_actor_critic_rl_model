@@ -35,16 +35,6 @@ class ACM:
         for episode_count in tqdm(range(self.max_episodes), desc="Episode", colour="green"):
 
             # TODO: add visualisation
-            # TODO ISSUES:
-            # right now, no state is the same and every state is visited at most once since
-            # the state object is used as a key and it is always different.
-            #
-            # the algorithm fails due to key errors at different episodes. In some cases, it
-            # even does not fail at all. This is probably related to the issue mentioned above.
-            #
-            # Visualising the steps achieved by the algorithm after each episode reveals that it
-            # is not really learning. This is also probably because of all the states being different
-            # even though they may be the same in terms of angle, speed etc. (pole problem)
 
             # reset eligibilities
             actor.reset_eligibilities()
