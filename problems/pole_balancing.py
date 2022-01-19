@@ -1,8 +1,8 @@
-from rl.environment import Domain, State
+from rl.environment import Domain
 import numpy as np
 
 
-class PoleBalancingState(State):
+class PoleBalancingState:
 
     def __init__(
             self,

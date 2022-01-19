@@ -1,23 +1,19 @@
-from rl.environment import Domain, State
+from rl.environment import Domain
 
 
 class TowersOfHanoi(Domain):
 
-    def __init__(self, config):
-        pass
-
     def produce_initial_state(self):
         pass
 
-    def generate_child_state(self, state: State, action):
+    def generate_child_state(self, state_id, action):
         pass
 
-    def is_terminal_state(self, state: State):
+    def is_terminal_state(self, state_id):
         pass
 
+    def get_actions(self, state_id):
+        pass
 
-class TowersOfHanoiState(State):
-
-    def __init__(self, actions):
-        super().__init__(actions)
-
+    def visualise_episode(self, episode):
+        pass
