@@ -52,9 +52,9 @@ class ACM:
 
             # get initial state and action
             current_state = domain.produce_initial_state()
-            current_action = actor.propose_action(current_state, self.epsilon)
             actor.add_state(current_state)
             critic.add_state(current_state)
+            current_action = actor.propose_action(current_state, self.epsilon)
 
             # initialise an empty episode
             episode = []
