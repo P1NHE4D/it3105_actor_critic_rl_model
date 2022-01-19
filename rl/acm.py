@@ -27,12 +27,12 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor()
+        actor = TableBasedActor(domain=domain)
         if self.critic_type == "table":
             critic = TableBasedCritic()
         else:
             critic = NNBasedCritic()
-        for _ in tqdm(range(self.max_episodes), desc="Episode", colour="green"):
+        for episode_count in tqdm(range(self.max_episodes), desc="Episode", colour="green"):
 
             # TODO: add visualisation
             # TODO ISSUES:
@@ -100,6 +100,8 @@ class ACM:
                 current_action = successor_action
 
             self.epsilon *= self.epsilon_decay
+            if episode_count == self.max_episodes - 1 or episode_count == 0:
+                domain.visualise_episode(episode)
 
     def predict(self):
         pass
@@ -108,10 +110,11 @@ class ACM:
 class TableBasedActor:
     # contains policy, which computes a score expressing how desirable an action is in a given state
 
-    def __init__(self):
+    def __init__(self, domain):
         # maps state-action pairs to desirability value
         self.policy = dict()
         self.eligibilities = dict()
+        self.domain = domain
 
     def add_state(self, state):
         """
@@ -119,7 +122,7 @@ class TableBasedActor:
 
         :param state: state to be added
         """
-        for action in state.actions:
+        for action in self.domain.get_actions(state):
             if (state, action) not in self.policy.keys():
                 self.policy[(state, action)] = 0
             if (state, action) not in self.eligibilities.keys():
@@ -139,12 +142,13 @@ class TableBasedActor:
         :param epsilon: probability for selecting a random action
         :return: an action
         """
+        actions = self.domain.get_actions(state)
         if np.random.choice(np.array([0, 1]), p=[1 - epsilon, epsilon]) == 1:
-            return np.random.choice(np.array(state.actions))
+            return np.random.choice(np.array(actions))
         best_action = None
         max_value = -math.inf
-        for action in state.actions:
-            state_value = self.policy[(state, action)] / len(state.actions)
+        for action in actions:
+            state_value = self.policy[(state, action)] / len(actions)
             if state_value > max_value:
                 best_action = action
                 max_value = state_value

@@ -1,20 +1,6 @@
 from abc import ABC, abstractmethod
 
 
-class State(ABC):
-
-    def __init__(self, actions):
-        self.actions = actions
-
-    @abstractmethod
-    def __hash__(self):
-        pass
-
-    @abstractmethod
-    def __eq__(self, other):
-        pass
-
-
 class Domain(ABC):
 
     @abstractmethod
@@ -22,9 +8,17 @@ class Domain(ABC):
         pass
 
     @abstractmethod
-    def generate_child_state(self, state: State, action):
+    def generate_child_state(self, state_id, action):
         pass
 
     @abstractmethod
-    def is_terminal_state(self, state: State):
+    def is_terminal_state(self, state_id):
+        pass
+
+    @abstractmethod
+    def get_actions(self, state_id):
+        pass
+
+    @abstractmethod
+    def visualise_episode(self, episode):
         pass
