@@ -27,7 +27,7 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor(domain=domain)
+        actor = TableBasedActor()
         if self.critic_type == "table":
             critic = TableBasedCritic()
         else:
@@ -41,8 +41,8 @@ class ACM:
             critic.reset_eligibilities()
 
             # get initial state and action
-            current_state = domain.produce_initial_state()
-            actor.add_state(current_state)
+            current_state, actions = domain.produce_initial_state()
+            actor.add_state(current_state, actions)
             critic.add_state(current_state)
             current_action = actor.propose_action(current_state, self.epsilon)
 
@@ -50,7 +50,7 @@ class ACM:
             episode = []
 
             step = 0
-            while step < self.steps and not domain.is_terminal_state(current_state):
+            while step < self.steps and not domain.is_current_state_terminal():
                 step += 1
 
                 # append the current state-action pair to the current episode and initialise required values
@@ -58,10 +58,10 @@ class ACM:
                 episode.append((current_state, current_action))
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
-                successor_state, reinforcement = domain.generate_child_state(current_state, current_action)
+                successor_state, actions, reinforcement = domain.generate_child_state(current_action)
 
                 # add successor states to actor and critic
-                actor.add_state(successor_state)
+                actor.add_state(successor_state, actions)
                 critic.add_state(successor_state)
 
                 # determine the best action from the successor based on the current policy
@@ -91,7 +91,7 @@ class ACM:
 
             self.epsilon *= self.epsilon_decay
             if episode_count == self.max_episodes - 1 or episode_count == 0:
-                domain.visualise_episode(episode)
+                domain.visualise()
 
     def predict(self):
         pass
@@ -100,19 +100,21 @@ class ACM:
 class TableBasedActor:
     # contains policy, which computes a score expressing how desirable an action is in a given state
 
-    def __init__(self, domain):
+    def __init__(self):
         # maps state-action pairs to desirability value
         self.policy = dict()
         self.eligibilities = dict()
-        self.domain = domain
+        self.state_actions = {}
 
-    def add_state(self, state):
+    def add_state(self, state, actions):
         """
         Adds the given state to the state-action dictionary
 
         :param state: state to be added
+        :param actions: possible actions in given state
         """
-        for action in self.domain.get_actions(state):
+        self.state_actions[state] = actions
+        for action in actions:
             if (state, action) not in self.policy.keys():
                 self.policy[(state, action)] = 0
             if (state, action) not in self.eligibilities.keys():
@@ -129,10 +131,11 @@ class TableBasedActor:
         """
         proposes an action in a given state based on the desirability determined by the policy
         :param state: state object for which an action should be selected
+        :param
         :param epsilon: probability for selecting a random action
         :return: an action
         """
-        actions = self.domain.get_actions(state)
+        actions = self.state_actions[state]
         if np.random.choice(np.array([0, 1]), p=[1 - epsilon, epsilon]) == 1:
             return np.random.choice(np.array(actions))
         best_action = None

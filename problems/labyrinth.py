@@ -9,19 +9,33 @@ start_row = 0
 start_col = 4
 
 
+def get_actions(row, col):
+    actions = []
+    if row < max_row:
+        actions.append("bottom")
+    if row > 0:
+        actions.append("top")
+    if col < max_col:
+        actions.append("right")
+    if col > 0:
+        actions.append("left")
+    return actions
+
+
 class Labyrinth(Domain):
 
     def __init__(self):
-        self.states = {}
+        self.states = []
 
     def produce_initial_state(self):
+        self.states = []
         state = (start_row, start_col)
-        if state.__hash__() not in self.states.keys():
-            self.states[state.__hash__()] = state
-        return state.__hash__()
+        self.states.append(state)
+        actions = get_actions(start_row, start_col)
+        return state.__hash__(), actions
 
-    def generate_child_state(self, state_hash, action):
-        state = self.states[state_hash]
+    def generate_child_state(self, action):
+        state = self.states[-1]
         row = state[0]
         col = state[1]
         if action == "right":
@@ -33,48 +47,27 @@ class Labyrinth(Domain):
         else:
             col = max(col - 1, 0)
 
-        successor = (row, col)
+        actions = get_actions(row, col)
 
-        if successor.__hash__() not in self.states.keys():
-            self.states[successor.__hash__()] = successor
+        successor = (row, col)
+        self.states.append(successor)
 
         if row == goal_row and col == goal_col:
             reinforcement = 9
         else:
             reinforcement = -1
-        return successor.__hash__(), reinforcement
+        return successor.__hash__(), actions, reinforcement
 
-    def is_terminal_state(self, state_hash):
-        state = self.states[state_hash]
+    def is_current_state_terminal(self):
+        state = self.states[-1]
         return state[0] == goal_row and state[1] == goal_col
 
-    def get_actions(self, state_hash):
-        state = self.states[state_hash]
-        row = state[0]
-        col = state[1]
-        actions = []
-        if row < max_row:
-            actions.append("bottom")
-        if row > 0:
-            actions.append("top")
-        if col < max_col:
-            actions.append("right")
-        if col > 0:
-            actions.append("left")
-        return actions
-
-    def get_state(self, state_hash):
-        return self.states[state_hash]
-
-    def visualise_episode(self, episode):
+    def visualise(self):
         field = np.full((max_row + 1, max_col + 1), '#')
-        for entry in episode:
-            state = self.states[entry[0]]
-            row = state[0]
-            col = state[1]
+        for row, col in self.states:
             field[row, col] = '+'
         field[start_row, start_col] = 'o'
         field[goal_row, goal_col] = 'x'
         print()
-        print("Total #steps needed: {}".format(len(episode)))
+        print("Total #steps needed: {}".format(len(self.states) - 1))
         print(field)

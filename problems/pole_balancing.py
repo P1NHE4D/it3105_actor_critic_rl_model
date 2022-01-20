@@ -99,5 +99,5 @@ class PoleBalancing(Domain):
             timestep=timestep
         ), reinforcement
 
-    def is_terminal_state(self, state: PoleBalancingState):
+    def is_current_state_terminal(self, state: PoleBalancingState):
         return np.abs(state.pole_angle) > self.pole_angle_magnitude or state.timestep >= self.max_timesteps

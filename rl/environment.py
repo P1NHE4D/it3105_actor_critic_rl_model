@@ -8,17 +8,13 @@ class Domain(ABC):
         pass
 
     @abstractmethod
-    def generate_child_state(self, state_id, action):
+    def generate_child_state(self, action):
         pass
 
     @abstractmethod
-    def is_terminal_state(self, state_id):
+    def is_current_state_terminal(self):
         pass
 
     @abstractmethod
-    def get_actions(self, state_id):
-        pass
-
-    @abstractmethod
-    def visualise_episode(self, episode):
+    def visualise(self):
         pass
