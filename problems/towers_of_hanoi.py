@@ -20,7 +20,6 @@ class Peg:
     """
     Peg is a single peg in the state description. It describes the disks
     currently on that peg as a list. The first element is the top-most disk.
-    Disks are
     """
     disks: list[Disk]
 
@@ -108,8 +107,9 @@ def calculate_reward(state_from, state_to):
     """
     Returns a reward associated with the state transition.
     """
-    if is_success(state_to):
-        return 10
+    # uuh I created this function assuming I would reward success, but I think
+    # it makes more sense to just penalize actions in general. Just return -1
+    # regardless.
     return -1
 
 class TowersOfHanoi(Domain):
