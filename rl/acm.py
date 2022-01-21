@@ -32,8 +32,12 @@ class ACM:
             critic = TableBasedCritic()
         else:
             critic = NNBasedCritic()
-        for episode_count in tqdm(range(self.max_episodes), desc="Episode", colour="green"):
 
+        # used for the progressbar only
+        steps_per_episode = []
+
+        progress = tqdm(range(self.max_episodes), desc="Episode", colour="green")
+        for episode_count in progress:
             # TODO: add visualisation
 
             # reset eligibilities
@@ -92,6 +96,18 @@ class ACM:
             self.epsilon *= self.epsilon_decay
             if episode_count == self.max_episodes - 1 or episode_count == 0:
                 domain.visualise()
+            
+            # update progressbar
+            
+            steps_per_episode.append(step)
+
+            progress.set_description(
+                f"[epsilon: {self.epsilon:.3f}] "
+                f"[steps: (curr:{steps_per_episode[-1]} "
+                f"min:{min(steps_per_episode)} "
+                f"avg:{np.mean(steps_per_episode):.3f})] "
+                f"[states: {critic.num_seen_states()}]"
+            )
 
     def predict(self):
         pass
@@ -222,6 +238,9 @@ class TableBasedCritic:
         :param decay_factor: decay factor
         """
         self.eligibilities[state] *= discount_rate * decay_factor
+    
+    def num_seen_states(self):
+        return len(self.state_values)
 
 
 class NNBasedCritic:
