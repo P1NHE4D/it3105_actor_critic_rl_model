@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from rl.environment import Domain
@@ -29,18 +30,22 @@ class PoleBalancing(Domain):
         self.left_boundary = config["left_boundary"]
         self.right_boundary = config["right_boundary"]
         self.max_timesteps = config["max_timesteps"]
-        self.velocity_bins = np.linspace(*config["bins"]["velocity"])
-        self.location_bins = np.linspace(*config["bins"]["location"])
-        self.angle_bins = np.linspace(*config["bins"]["angle"])
-        self.angle_td_bins = np.linspace(*config["bins"]["angle_td"])
-        self.angle_tdd_bins = np.linspace(*config["bins"]["angle_tdd"])
+        self.velocity_bins = compute_bins(*config["bins"]["velocity"])
+        self.location_bins = compute_bins(*config["bins"]["location"])
+        self.angle_bins = compute_bins(*config["bins"]["angle"])
+        self.angle_td_bins = compute_bins(*config["bins"]["angle_td"])
+        self.angle_tdd_bins = compute_bins(*config["bins"]["angle_tdd"])
         self.states: [Cart] = []
         self.episode_count = 0
         self.step_count = []
+        self.best_episode = []
+        self.discretize = config["critic_type"] == "table"
 
     def produce_initial_state(self):
         self.states = []
-        angle = discretize_value(np.random.uniform(-self.angle_magnitude, self.angle_magnitude), self.angle_bins)
+        angle = np.random.uniform(-self.angle_magnitude, self.angle_magnitude)
+        if self.discretize:
+            angle = discretize_value(angle, self.angle_bins)
         init_state = Cart(
             velocity=0,
             location=0,
@@ -78,12 +83,19 @@ class PoleBalancing(Domain):
         angle = state.angle + self.timestep * angle_td
         location = state.location + self.timestep * velocity
 
+        if self.discretize:
+            angle = discretize_value(angle, self.angle_bins)
+            angle_td = discretize_value(angle_td, self.angle_td_bins)
+            angle_tdd = discretize_value(angle_tdd, self.angle_tdd_bins)
+            velocity = discretize_value(velocity, self.velocity_bins)
+            location = discretize_value(location, self.location_bins)
+
         successor = Cart(
-            angle=discretize_value(angle, self.angle_bins),
-            angle_td=discretize_value(angle_td, self.angle_td_bins),
-            angle_tdd=discretize_value(angle_tdd, self.angle_tdd_bins),
-            velocity=discretize_value(velocity, self.velocity_bins),
-            location=discretize_value(location, self.location_bins)
+            angle=angle,
+            angle_td=angle_td,
+            angle_tdd=angle_tdd,
+            velocity=velocity,
+            location=location
         )
         self.states.append(successor)
 
@@ -100,13 +112,19 @@ class PoleBalancing(Domain):
         if a or b or c:
             self.step_count.append(len(self.states))
             self.episode_count += 1
+            if len(self.states) >= len(self.best_episode):
+                self.best_episode = self.states
 
         return a or b or c
 
     def visualise(self):
         plt.plot(np.arange(1, self.episode_count + 1), self.step_count)
-        plt.xlabel("Episodes")
-        plt.ylabel("Timesteps")
+        plt.xlabel("Episode")
+        plt.ylabel("Timestep")
+        plt.show()
+        plt.plot(np.arange(1, len(self.best_episode) + 1), list(map(lambda x: x.angle, self.best_episode)))
+        plt.xlabel("Timestep")
+        plt.ylabel("Angle")
         plt.show()
 
     def compute_reinforcement(self, state: Cart):
@@ -117,6 +135,10 @@ class PoleBalancing(Domain):
         if len(self.states) > self.max_timesteps:
             return 100
         return 1
+
+
+def compute_bins(start, stop, count):
+    return np.arange(start, stop, (abs(start) + abs(stop)) / count)
 
 
 def discretize_value(value, bins):
