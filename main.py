@@ -1,5 +1,5 @@
 from problems.labyrinth import Labyrinth
-from rl.acm import ACM
+from rl.core import ACM
 import json
 
 

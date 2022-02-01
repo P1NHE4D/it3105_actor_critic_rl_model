@@ -1,4 +1,4 @@
-from rl.environment import Domain
+from rl.env import Domain
 import numpy as np
 
 

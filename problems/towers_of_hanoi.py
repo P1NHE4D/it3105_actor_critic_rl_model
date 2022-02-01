@@ -1,6 +1,7 @@
-from rl.environment import Domain
+from rl.env import Domain
 from dataclasses import dataclass
 from copy import deepcopy
+
 
 # Notice that @dataclass means we'll get an __eq__ for free that is based on
 # each property of the class ("eq=True" is the default). Notice also the use of
@@ -15,6 +16,7 @@ class Disk:
     """
     Size: int
 
+
 @dataclass
 class Peg:
     """
@@ -28,6 +30,7 @@ class Peg:
         hashed_disks = [hash(disk) for disk in self.disks]
         return hash(tuple(hashed_disks))
 
+
 @dataclass
 class State:
     """
@@ -39,6 +42,7 @@ class State:
         # hash by converting to tuple
         hashed_pegs = [hash(peg) for peg in self.pegs]
         return hash(tuple(hashed_pegs))
+
 
 @dataclass
 class Action:
@@ -52,6 +56,7 @@ class Action:
     def __hash__(self):
         return hash(tuple([self.popFrom, self.pushTo]))
 
+
 def is_success(state: State):
     """
     Returns True if the state describes a solved problem.
@@ -60,6 +65,7 @@ def is_success(state: State):
     # for the order of the pegs on the last pole, since it is impossible to
     # achieve any other order than the correct one
     return all(len(peg.disks) == 0 for peg in state.pegs[:-1])
+
 
 def legal_actions(state: State):
     """
@@ -88,6 +94,7 @@ def legal_actions(state: State):
 
     return actions
 
+
 def successor(state: State, action: Action):
     """
     Generate successor of state through application of action. Assumes action is
@@ -103,6 +110,7 @@ def successor(state: State, action: Action):
 
     return state
 
+
 def calculate_reward(state_from, state_to):
     """
     Returns a reward associated with the state transition.
@@ -112,6 +120,7 @@ def calculate_reward(state_from, state_to):
     # regardless.
     return -1
 
+
 class TowersOfHanoi(Domain):
 
     def __init__(self, num_pegs, num_disks):
@@ -120,7 +129,7 @@ class TowersOfHanoi(Domain):
 
         # to be set  by produce_initial_state
         self.states = None
-    
+
     def get_current_state(self):
         return self.states[-1], legal_actions(self.states[-1])
 
@@ -129,7 +138,7 @@ class TowersOfHanoi(Domain):
         # with smaller disks atop larger disks
         disks = list(range(self.num_disks))
         firstPeg = Peg(disks=disks)
-        restPegs = [Peg(disks=[]) for _ in range(self.num_pegs-1)]
+        restPegs = [Peg(disks=[]) for _ in range(self.num_pegs - 1)]
         pegs = [firstPeg] + restPegs
         self.states = [State(pegs=pegs)]
 
@@ -153,4 +162,4 @@ class TowersOfHanoi(Domain):
             for peg in state.pegs:
                 print(" " + str(peg.disks))
             print()
-        print(f"solved the problem in {len(self.states) -1} moves")
+        print(f"solved the problem in {len(self.states) - 1} moves")
