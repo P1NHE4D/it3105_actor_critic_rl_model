@@ -39,11 +39,20 @@ class PoleBalancing(Domain):
         self.episode_count = 0
         self.step_count = []
         self.best_episode = []
-        self.discretize = config["critic_type"] == "table"
+        self.discretize = True
+        self.real_states = []
 
     def produce_initial_state(self):
         self.states = []
+        self.real_states = []
         angle = np.random.uniform(-self.angle_magnitude, self.angle_magnitude)
+        self.real_states.append(Cart(
+            velocity=0,
+            location=0,
+            angle=angle,
+            angle_td=0,
+            angle_tdd=0
+        ))
         if self.discretize:
             angle = discretize_value(angle, self.angle_bins)
         init_state = Cart(
@@ -57,7 +66,7 @@ class PoleBalancing(Domain):
         return init_state.__hash__(), ACTIONS
 
     def generate_child_state(self, action):
-        state = self.states[-1]
+        state = self.real_states[-1]
         bb_force = -self.force if action == "left" else self.force
 
         angle_tdd = compute_angle_tdd(
@@ -83,6 +92,14 @@ class PoleBalancing(Domain):
         angle = state.angle + self.timestep * angle_td
         location = state.location + self.timestep * velocity
 
+        self.real_states.append(Cart(
+            angle=angle,
+            angle_td=angle_td,
+            angle_tdd=angle_tdd,
+            velocity=velocity,
+            location=location
+        ))
+
         if self.discretize:
             angle = discretize_value(angle, self.angle_bins)
             angle_td = discretize_value(angle_td, self.angle_td_bins)
@@ -104,7 +121,7 @@ class PoleBalancing(Domain):
         return successor.__hash__(), ACTIONS, reinforcement
 
     def is_current_state_terminal(self):
-        state: Cart = self.states[-1]
+        state: Cart = self.real_states[-1]
         a = abs(state.angle) > self.angle_magnitude
         b = (state.location < self.left_boundary) or (state.location > self.right_boundary)
         c = len(self.states) > self.max_timesteps
@@ -126,15 +143,17 @@ class PoleBalancing(Domain):
         plt.xlabel("Timestep")
         plt.ylabel("Angle")
         plt.show()
+        plt.plot(np.arange(1, len(self.best_episode) + 1), list(map(lambda x: x.location, self.best_episode)))
+        plt.xlabel("Timestep")
+        plt.ylabel("Location")
+        plt.show()
 
     def compute_reinforcement(self, state: Cart):
         if abs(state.angle) > self.angle_magnitude:
-            return -100
+            return -1000
         if state.location < self.left_boundary or state.location > self.right_boundary:
-            return -100
-        if len(self.states) > self.max_timesteps:
-            return 100
-        return 1
+            return -1000
+        return len(self.states)
 
 
 def compute_bins(start, stop, count):
