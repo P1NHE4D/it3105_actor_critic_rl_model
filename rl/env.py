@@ -4,11 +4,11 @@ from abc import ABC, abstractmethod
 class Domain(ABC):
 
     @abstractmethod
-    def produce_initial_state(self):
+    def get_init_state(self):
         pass
 
     @abstractmethod
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         pass
 
     @abstractmethod

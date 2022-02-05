@@ -38,7 +38,7 @@ class PoleBalancing(Domain):
         self.sim_timestep = config["sim_timestep"]
         self.max_timesteps = config["max_timesteps"]
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         return PoleBalancingState(
             pole_angle=np.random.uniform(-self.pole_angle_magnitude, self.pole_angle_magnitude, 1),
             pole_angle_fst_td=0,
@@ -49,7 +49,7 @@ class PoleBalancing(Domain):
             timestep=1
         )
 
-    def generate_child_state(self, state: PoleBalancingState, action):
+    def get_child_state(self, state: PoleBalancingState, action):
         # determining bang-bang force based on the selected action
         bb_force = self.force if action == "positive" else -self.force
 

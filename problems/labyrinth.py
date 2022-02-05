@@ -27,14 +27,14 @@ class Labyrinth(Domain):
     def __init__(self):
         self.states = []
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         self.states = []
         state = (start_row, start_col)
         self.states.append(state)
         actions = get_actions(start_row, start_col)
         return state, actions
 
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         state = self.states[-1]
         row = state[0]
         col = state[1]

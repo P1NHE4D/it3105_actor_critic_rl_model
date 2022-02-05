@@ -133,7 +133,7 @@ class TowersOfHanoi(Domain):
     def get_current_state(self):
         return self.states[-1], legal_actions(self.states[-1])
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         # prepare initial state as one where all disks are on the first peg,
         # with smaller disks atop larger disks
         disks = list(range(self.num_disks))
@@ -144,7 +144,7 @@ class TowersOfHanoi(Domain):
 
         return self.get_current_state()
 
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         self.states.append(
             successor(self.states[-1], action)
         )

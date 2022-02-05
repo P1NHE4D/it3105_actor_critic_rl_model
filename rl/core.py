@@ -45,7 +45,7 @@ class ACM:
             critic.reset_eligibilities()
 
             # get initial state and action
-            current_state, actions = domain.produce_initial_state()
+            current_state, actions = domain.get_init_state()
             actor.add_state(current_state, actions)
             critic.add_state(current_state)
             current_action = actor.propose_action(current_state, self.epsilon)
@@ -63,7 +63,7 @@ class ACM:
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
                 # TODO: should be an actual state, not a hash
-                successor_state, actions, reinforcement = domain.generate_child_state(current_action)
+                successor_state, actions, reinforcement = domain.get_child_state(current_action)
 
                 # add successor states to actor and critic
                 actor.add_state(successor_state, actions)
