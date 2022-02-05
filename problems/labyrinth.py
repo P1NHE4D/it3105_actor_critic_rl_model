@@ -32,7 +32,7 @@ class Labyrinth(Domain):
         state = (start_row, start_col)
         self.states.append(state)
         actions = get_actions(start_row, start_col)
-        return state.__hash__(), actions
+        return state, actions
 
     def generate_child_state(self, action):
         state = self.states[-1]
@@ -53,10 +53,10 @@ class Labyrinth(Domain):
         self.states.append(successor)
 
         if row == goal_row and col == goal_col:
-            reinforcement = 9
+            reinforcement = 100
         else:
             reinforcement = -1
-        return successor.__hash__(), actions, reinforcement
+        return successor, actions, reinforcement
 
     def is_current_state_terminal(self):
         state = self.states[-1]

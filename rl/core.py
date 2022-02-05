@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 
 from rl.actor import TableBasedActor
+from rl.critic import TableBasedCritic, NNBasedCritic
 from rl.env import Domain
 
 
@@ -18,7 +19,7 @@ class ACM:
         self.epsilon = config["epsilon"]
         self.epsilon_decay = config["epsilon_decay"]
         self.visualise = config["visualise"]
-        self.verbose = config["verbose"]
+        self.discretize = config["discretize"]
 
     def fit(self, domain: Domain):
         """
@@ -26,11 +27,11 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor()
+        actor = TableBasedActor(self.actor_lr)
         if self.critic_type == "table":
-            critic = TableBasedCritic()
+            critic = TableBasedCritic(self.critic_lr)
         else:
-            critic = NNBasedCritic()
+            critic = NNBasedCritic(self.critic_lr, self.critic_nn_dims)
 
         # used for the progressbar only
         steps_per_episode = []
@@ -61,6 +62,7 @@ class ACM:
                 episode.append((current_state, current_action))
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
+                # TODO: should be an actual state, not a hash
                 successor_state, actions, reinforcement = domain.generate_child_state(current_action)
 
                 # add successor states to actor and critic
@@ -82,10 +84,10 @@ class ACM:
 
                 # update the value function, eligibilities, and the policy for each state of the current episode
                 for state, action in episode:
-                    critic.update_value_function(state=state, learning_rate=self.critic_lr, td_error=td_error)
+                    critic.update_value_function(state=state, td_error=td_error)
                     critic.update_eligibilities(state=state, discount_rate=self.discount_rate,
                                                 decay_factor=self.decay_factor)
-                    actor.update_policy(state=state, action=action, learning_rate=self.actor_lr, td_error=td_error)
+                    actor.update_policy(state=state, action=action, td_error=td_error)
                     actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate,
                                                decay_factor=self.decay_factor)
 
@@ -93,11 +95,11 @@ class ACM:
                 current_action = successor_action
 
             self.epsilon *= self.epsilon_decay
-            if episode_count == self.max_episodes - 1 or episode_count == 0:
+            if any(map(lambda x: x == episode_count, self.visualise)):
                 domain.visualise()
-            
+
             # update progressbar
-            
+
             steps_per_episode.append(step)
 
             progress.set_description(

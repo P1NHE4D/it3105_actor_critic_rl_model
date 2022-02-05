@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import tensorflow as tf
+import numpy as np
 
 
 class Critic(ABC):
@@ -17,7 +18,7 @@ class Critic(ABC):
         pass
 
     @abstractmethod
-    def update_value_function(self, state, learning_rate, td_error):
+    def update_value_function(self, state, td_error):
         pass
 
     @abstractmethod
@@ -27,10 +28,11 @@ class Critic(ABC):
 
 class TableBasedCritic(Critic):
 
-    def __init__(self, ):
+    def __init__(self, learning_rate):
         # maps states to values
         self.state_values = dict()
         self.eligibilities = dict()
+        self.learning_rate = learning_rate
 
     def add_state(self, state):
         """
@@ -57,15 +59,11 @@ class TableBasedCritic(Critic):
         """
         return reinforcement + (discount_rate * self.state_values[successor_state]) - self.state_values[current_state]
 
-    def update_value_function(self, state, learning_rate, td_error):
+    def update_value_function(self, state, td_error):
         """
         Updates the value of the given state based on td_error and the learning_rate
-
-        :param state: state for which the value should be updated
-        :param learning_rate: learning rate
-        :param td_error: temporal difference error
         """
-        self.state_values[state] += learning_rate * td_error * self.eligibilities[state]
+        self.state_values[state] += self.learning_rate * td_error * self.eligibilities[state]
 
     def update_eligibilities(self, state, discount_rate, decay_factor):
         """
@@ -82,17 +80,41 @@ class TableBasedCritic(Critic):
 
 
 class NNBasedCritic(Critic):
+
+    def __init__(self, learning_rate, nn_dims):
+        self.learning_rate = learning_rate
+        self.nn_dims = nn_dims
+        self.model = self.construct_nn()
+
+    # not required
     def add_state(self, state):
         pass
 
+    def construct_nn(self):
+        optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+        model = tf.keras.models.Sequential()
+        model.add(tf.keras.layers.Flatten())
+        for units in self.nn_dims:
+            model.add(tf.keras.layers.Dense(units=units, activation=tf.nn.relu))
+        model.compile(
+            optimizer=optimizer,
+            loss='mse'
+        )
+        return model
+
+    # not required
     def reset_eligibilities(self):
         pass
 
     def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
+        return reinforcement + discount_rate * self.model.predict(successor_state) - self.model.predict(current_state)
+
+    def update_value_function(self, state, td_error):
+        # pred = self.model.predict(successor_state)
+        # target = reinforcement + discount_rate * pred
+        # self.model.train(current_state, target)
         pass
 
-    def update_value_function(self, state, learning_rate, td_error):
-        pass
-
+    # not required
     def update_eligibilities(self, state, discount_rate, decay_factor):
         pass

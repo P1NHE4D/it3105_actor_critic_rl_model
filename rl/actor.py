@@ -5,11 +5,12 @@ import numpy as np
 class TableBasedActor:
     # contains policy, which computes a score expressing how desirable an action is in a given state
 
-    def __init__(self):
+    def __init__(self, learning_rate):
         # maps state-action pairs to desirability value
         self.policy = dict()
         self.eligibilities = dict()
         self.state_actions = {}
+        self.learning_rate = learning_rate
 
     def add_state(self, state, actions):
         """
@@ -52,16 +53,15 @@ class TableBasedActor:
                 max_value = state_value
         return best_action
 
-    def update_policy(self, state, action, learning_rate, td_error):
+    def update_policy(self, state, action, td_error):
         """
         Updates the policy using the td error computed by the critic
 
         :param state: state for which the policy should be updated
         :param action: corresponding action of the state
-        :param learning_rate: learning rate
         :param td_error: temporal difference error computed by the critic
         """
-        self.policy[(state, action)] += learning_rate * td_error * self.eligibilities[(state, action)]
+        self.policy[(state, action)] += self.learning_rate * td_error * self.eligibilities[(state, action)]
 
     def update_eligibilities(self, state, action, discount_rate, decay_factor):
         """
