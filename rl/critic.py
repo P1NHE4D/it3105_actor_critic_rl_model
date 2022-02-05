@@ -14,6 +14,10 @@ class Critic(ABC):
         pass
 
     @abstractmethod
+    def increase_eligibility(self, state):
+        pass
+
+    @abstractmethod
     def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
         pass
 
@@ -40,30 +44,38 @@ class TableBasedCritic(Critic):
 
         :param state: state to be added
         """
-        if state not in self.state_values.keys():
-            self.state_values[state] = np.random.uniform()
-        if state not in self.eligibilities.keys():
-            self.eligibilities[state] = 0
+        state_id = hash(tuple(state))
+        if state_id not in self.state_values.keys():
+            self.state_values[state_id] = np.random.uniform()
+        if state_id not in self.eligibilities.keys():
+            self.eligibilities[state_id] = 0
 
     def reset_eligibilities(self):
         """
         Resets all eligibilities to 0
         """
-        for state in self.eligibilities:
-            self.eligibilities[state] = 0
+        for state_id in self.eligibilities.keys():
+            self.eligibilities[state_id] = 0
+
+    def increase_eligibility(self, state):
+        state_id = hash(tuple(state))
+        self.eligibilities[state_id] = 1
 
     def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
         """
         computes the temporal difference error based on the reinforcement and value of a state
         :return: td error
         """
-        return reinforcement + (discount_rate * self.state_values[successor_state]) - self.state_values[current_state]
+        curr_state_id = hash(tuple(current_state))
+        suc_state_id = hash(tuple(successor_state))
+        return reinforcement + (discount_rate * self.state_values[suc_state_id]) - self.state_values[curr_state_id]
 
     def update_value_function(self, state, td_error):
         """
         Updates the value of the given state based on td_error and the learning_rate
         """
-        self.state_values[state] += self.learning_rate * td_error * self.eligibilities[state]
+        state_id = hash(tuple(state))
+        self.state_values[state_id] += self.learning_rate * td_error * self.eligibilities[state_id]
 
     def update_eligibilities(self, state, discount_rate, decay_factor):
         """
@@ -73,7 +85,8 @@ class TableBasedCritic(Critic):
         :param discount_rate: discount rate
         :param decay_factor: decay factor
         """
-        self.eligibilities[state] *= discount_rate * decay_factor
+        state_id = hash(tuple(state))
+        self.eligibilities[state_id] *= discount_rate * decay_factor
 
     def num_seen_states(self):
         return len(self.state_values)
@@ -104,6 +117,10 @@ class NNBasedCritic(Critic):
 
     # not required
     def reset_eligibilities(self):
+        pass
+
+    # not required
+    def increase_eligibility(self, state):
         pass
 
     def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):

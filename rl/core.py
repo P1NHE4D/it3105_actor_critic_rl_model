@@ -27,7 +27,10 @@ class ACM:
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor(self.actor_lr)
+        actor = TableBasedActor(
+            learning_rate=self.actor_lr,
+            epsilon=self.epsilon
+        )
         if self.critic_type == "table":
             critic = TableBasedCritic(self.critic_lr)
         else:
@@ -48,7 +51,7 @@ class ACM:
             current_state, actions = domain.get_init_state()
             actor.add_state(current_state, actions)
             critic.add_state(current_state)
-            current_action = actor.propose_action(current_state, self.epsilon)
+            current_action = actor.propose_action(current_state)
 
             # initialise an empty episode
             episode = []
@@ -62,7 +65,6 @@ class ACM:
                 episode.append((current_state, current_action))
 
                 # obtain a successor state and the reinforcement from moving to that state from the domain
-                # TODO: should be an actual state, not a hash
                 successor_state, actions, reinforcement = domain.get_child_state(current_action)
 
                 # add successor states to actor and critic
@@ -70,9 +72,10 @@ class ACM:
                 critic.add_state(successor_state)
 
                 # determine the best action from the successor based on the current policy
-                successor_action = actor.propose_action(state=successor_state, epsilon=self.epsilon)
+                successor_action = actor.propose_action(state=successor_state)
                 # increase the eligibility of the current state
-                actor.eligibilities[(current_state, current_action)] = 1
+
+                actor.increase_eligibility(current_state, current_action)
                 # compute the td error using the current and the successor state
                 td_error = critic.compute_td_error(
                     current_state=current_state,
@@ -80,7 +83,7 @@ class ACM:
                     reinforcement=reinforcement,
                     discount_rate=self.discount_rate
                 )
-                critic.eligibilities[current_state] = 1
+                critic.increase_eligibility(current_state)
 
                 # update the value function, eligibilities, and the policy for each state of the current episode
                 for state, action in episode:
