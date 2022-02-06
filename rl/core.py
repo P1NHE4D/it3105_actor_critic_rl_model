@@ -64,15 +64,12 @@ class ACM:
                 # obtain a successor state and the reinforcement from moving to that state from the domain
                 successor_state, actions, reinforcement = domain.get_child_state(current_action)
 
-                # add successor states to actor and critic
-                # actor.add_state(successor_state, actions)
-                # critic.add_state(successor_state)
-
                 # determine the best action from the successor based on the current policy
                 successor_action = actor.propose_action(state=successor_state, actions=actions)
-                # increase the eligibility of the current state
 
+                # increase the eligibility of the current state
                 actor.increase_eligibility(current_state, current_action)
+
                 # compute the td error using the current and the successor state
                 td_error = critic.compute_td_error(
                     state=current_state,
