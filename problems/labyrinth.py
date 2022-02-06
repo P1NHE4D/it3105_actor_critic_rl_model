@@ -32,7 +32,9 @@ class Labyrinth(Domain):
         state = [start_row, start_col]
         self.states.append(state)
         actions = get_actions(start_row, start_col)
-        return state, actions
+        r = np.zeros((max_row + 1, max_col + 1))
+        r[start_row, start_col] = 1
+        return r.flatten(), actions
 
     def get_child_state(self, action):
         state = self.states[-1]
@@ -53,7 +55,9 @@ class Labyrinth(Domain):
         self.states.append(successor)
 
         reinforcement = -1
-        return successor, actions, reinforcement
+        r = np.zeros((max_row + 1, max_col + 1))
+        r[row, col] = 1
+        return r.flatten(), actions, reinforcement
 
     def is_current_state_terminal(self):
         state = self.states[-1]

@@ -19,11 +19,11 @@ class Critic(ABC):
         pass
 
     @abstractmethod
-    def update_value_function(self, state, td_error):
+    def update_value_function(self, episode):
         pass
 
     @abstractmethod
-    def update_eligibilities(self, state, discount_rate, decay_factor):
+    def update_eligibilities(self, episode, discount_rate, decay_factor):
         pass
 
 
@@ -34,6 +34,7 @@ class TableBasedCritic(Critic):
         self.state_values = DefaultValueTable(np.random.uniform)
         self.eligibilities = DefaultValueTable(lambda: 0)
         self.learning_rate = learning_rate
+        self.td_error = 0
 
     def reset_eligibilities(self):
         """
@@ -53,25 +54,28 @@ class TableBasedCritic(Critic):
         """
         state_id = hash(tuple(state))
         suc_state_id = hash(tuple(successor_state))
-        return reinforcement + (discount_rate * self.state_values[suc_state_id]) - self.state_values[state_id]
+        self.td_error = reinforcement + (discount_rate * self.state_values[suc_state_id]) - self.state_values[state_id]
+        return self.td_error
 
-    def update_value_function(self, state, td_error):
+    def update_value_function(self, episode):
         """
         Updates the value of the given state based on td_error and the learning_rate
         """
-        state_id = hash(tuple(state))
-        self.state_values[state_id] += self.learning_rate * td_error * self.eligibilities[state_id]
+        for state, _ in episode:
+            state_id = hash(tuple(state))
+            self.state_values[state_id] += self.learning_rate * self.td_error * self.eligibilities[state_id]
 
-    def update_eligibilities(self, state, discount_rate, decay_factor):
+    def update_eligibilities(self, episode, discount_rate, decay_factor):
         """
         Updates the eligibility traces of the given state using the given discount rate and decay factor
 
-        :param state: state for which the eligibility should be updated
+        :param episode:
         :param discount_rate: discount rate
         :param decay_factor: decay factor
         """
-        state_id = hash(tuple(state))
-        self.eligibilities[state_id] *= discount_rate * decay_factor
+        for state, _ in episode:
+            state_id = hash(tuple(state))
+            self.eligibilities[state_id] *= discount_rate * decay_factor
 
     def num_seen_states(self):
         return len(self.state_values)
@@ -83,10 +87,7 @@ class NNBasedCritic(Critic):
         self.learning_rate = learning_rate
         self.nn_dims = nn_dims
         self.model = self.construct_nn()
-
-    # not required
-    def add_state(self, state):
-        pass
+        self.target = 0
 
     def construct_nn(self):
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
@@ -108,18 +109,17 @@ class NNBasedCritic(Critic):
         pass
 
     def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
-        current_state = [state]
-        successor_state = [successor_state]
+        current_state = np.array([state])
+        successor_state = np.array([successor_state])
         v_succ = self.model.predict(successor_state)[0, 0]
         v_curr = self.model.predict(current_state)[0, 0]
+        self.target = reinforcement + discount_rate * v_succ
         return reinforcement + discount_rate * v_succ - v_curr
 
-    def update_value_function(self, state, td_error):
-        # pred = self.model.predict([successor_state])[0,0]
-        # target = reinforcement + discount_rate * pred
-        # self.model.fit([state], [target])
-        pass
+    def update_value_function(self, episode):
+        states = list(map(lambda e: e[0], episode))
+        self.model.fit(np.array(states), np.full((len(states)), self.target))
 
     # not required
-    def update_eligibilities(self, state, discount_rate, decay_factor):
+    def update_eligibilities(self, episode, discount_rate, decay_factor):
         pass

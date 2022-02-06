@@ -80,13 +80,10 @@ class ACM:
                 critic.increase_eligibility(current_state)
 
                 # update the value function, eligibilities, and the policy for each state of the current episode
-                for state, action in episode:
-                    critic.update_value_function(state=state, td_error=td_error)
-                    critic.update_eligibilities(state=state, discount_rate=self.discount_rate,
-                                                decay_factor=self.decay_factor)
-                    actor.update_policy(state=state, action=action, td_error=td_error)
-                    actor.update_eligibilities(state=state, action=action, discount_rate=self.discount_rate,
-                                               decay_factor=self.decay_factor)
+                critic.update_value_function(episode=episode)
+                critic.update_eligibilities(episode=episode, discount_rate=self.discount_rate,decay_factor=self.decay_factor)
+                actor.update_policy(episode=episode, td_error=td_error)
+                actor.update_eligibilities(episode=episode, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
 
                 current_state = successor_state
                 current_action = successor_action
@@ -104,7 +101,6 @@ class ACM:
                 f"[steps: (curr:{steps_per_episode[-1]} "
                 f"min:{min(steps_per_episode)} "
                 f"avg:{np.mean(steps_per_episode):.3f})] "
-                f"[states: {critic.num_seen_states()}]"
             )
 
     def predict(self):

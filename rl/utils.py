@@ -1,7 +1,5 @@
 from collections import UserDict, Callable
 
-import numpy as np
-
 
 class DefaultValueTable(UserDict):
 

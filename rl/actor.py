@@ -45,26 +45,26 @@ class TableBasedActor:
                 max_value = state_value
         return best_action
 
-    def update_policy(self, state, action, td_error):
+    def update_policy(self, episode, td_error):
         """
         Updates the policy using the td error computed by the critic
 
-        :param state: state for which the policy should be updated
-        :param action: corresponding action of the state
+        :param episode:
         :param td_error: temporal difference error computed by the critic
         """
-        state_id = hash(tuple(state))
-        self.policy[(state_id, action)] += self.learning_rate * td_error * self.eligibilities[(state_id, action)]
+        for state, action in episode:
+            state_id = hash(tuple(state))
+            self.policy[(state_id, action)] += self.learning_rate * td_error * self.eligibilities[(state_id, action)]
 
-    def update_eligibilities(self, state, action, discount_rate, decay_factor):
+    def update_eligibilities(self, episode, discount_rate, decay_factor):
         """
         Updates the eligibilities for the given state-action pair based on the discount rate and
         decay factor.
 
-        :param state: state for which the eligibility should be updated
-        :param action: corresponding action of the state
+        :param episode:
         :param discount_rate: discount rate
         :param decay_factor: decay factor of eligibility
         """
-        state_id = hash(tuple(state))
-        self.eligibilities[(state_id, action)] *= discount_rate * decay_factor
+        for state, action in episode:
+            state_id = hash(tuple(state))
+            self.eligibilities[(state_id, action)] *= discount_rate * decay_factor
