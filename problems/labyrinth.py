@@ -52,10 +52,7 @@ class Labyrinth(Domain):
         successor = [row, col]
         self.states.append(successor)
 
-        if row == goal_row and col == goal_col:
-            reinforcement = 100
-        else:
-            reinforcement = -1
+        reinforcement = -1
         return successor, actions, reinforcement
 
     def is_current_state_terminal(self):

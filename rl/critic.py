@@ -1,13 +1,10 @@
 from abc import ABC, abstractmethod
 import tensorflow as tf
 import numpy as np
+from rl.utils import DefaultValueTable
 
 
 class Critic(ABC):
-
-    @abstractmethod
-    def add_state(self, state):
-        pass
 
     @abstractmethod
     def reset_eligibilities(self):
@@ -34,21 +31,9 @@ class TableBasedCritic(Critic):
 
     def __init__(self, learning_rate):
         # maps states to values
-        self.state_values = dict()
-        self.eligibilities = dict()
+        self.state_values = DefaultValueTable(np.random.uniform)
+        self.eligibilities = DefaultValueTable(lambda: 0)
         self.learning_rate = learning_rate
-
-    def add_state(self, state):
-        """
-        Adds the given state to the state-value dict
-
-        :param state: state to be added
-        """
-        state_id = hash(tuple(state))
-        if state_id not in self.state_values.keys():
-            self.state_values[state_id] = np.random.uniform()
-        if state_id not in self.eligibilities.keys():
-            self.eligibilities[state_id] = 0
 
     def reset_eligibilities(self):
         """
@@ -125,8 +110,8 @@ class NNBasedCritic(Critic):
     def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
         current_state = [state]
         successor_state = [successor_state]
-        v_succ = self.model.predict(successor_state)[0,0]
-        v_curr = self.model.predict(current_state)[0,0]
+        v_succ = self.model.predict(successor_state)[0, 0]
+        v_curr = self.model.predict(current_state)[0, 0]
         return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, state, td_error):

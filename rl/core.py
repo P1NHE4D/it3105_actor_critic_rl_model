@@ -41,7 +41,6 @@ class ACM:
 
         progress = tqdm(range(self.max_episodes), desc="Episode", colour="green")
         for episode_count in progress:
-            # TODO: add visualisation
 
             # reset eligibilities
             actor.reset_eligibilities()
@@ -49,9 +48,7 @@ class ACM:
 
             # get initial state and action
             current_state, actions = domain.get_init_state()
-            actor.add_state(current_state, actions)
-            critic.add_state(current_state)
-            current_action = actor.propose_action(current_state)
+            current_action = actor.propose_action(current_state, actions)
 
             # initialise an empty episode
             episode = []
@@ -68,11 +65,11 @@ class ACM:
                 successor_state, actions, reinforcement = domain.get_child_state(current_action)
 
                 # add successor states to actor and critic
-                actor.add_state(successor_state, actions)
-                critic.add_state(successor_state)
+                # actor.add_state(successor_state, actions)
+                # critic.add_state(successor_state)
 
                 # determine the best action from the successor based on the current policy
-                successor_action = actor.propose_action(state=successor_state)
+                successor_action = actor.propose_action(state=successor_state, actions=actions)
                 # increase the eligibility of the current state
 
                 actor.increase_eligibility(current_state, current_action)
