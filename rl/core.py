@@ -78,7 +78,7 @@ class ACM:
                 actor.increase_eligibility(current_state, current_action)
                 # compute the td error using the current and the successor state
                 td_error = critic.compute_td_error(
-                    current_state=current_state,
+                    state=current_state,
                     successor_state=successor_state,
                     reinforcement=reinforcement,
                     discount_rate=self.discount_rate

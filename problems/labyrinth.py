@@ -29,7 +29,7 @@ class Labyrinth(Domain):
 
     def get_init_state(self):
         self.states = []
-        state = (start_row, start_col)
+        state = [start_row, start_col]
         self.states.append(state)
         actions = get_actions(start_row, start_col)
         return state, actions
@@ -49,10 +49,13 @@ class Labyrinth(Domain):
 
         actions = get_actions(row, col)
 
-        successor = (row, col)
+        successor = [row, col]
         self.states.append(successor)
 
-        reinforcement = -1
+        if row == goal_row and col == goal_col:
+            reinforcement = 100
+        else:
+            reinforcement = -1
         return successor, actions, reinforcement
 
     def is_current_state_terminal(self):

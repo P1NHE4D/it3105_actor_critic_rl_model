@@ -18,7 +18,7 @@ class Critic(ABC):
         pass
 
     @abstractmethod
-    def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
+    def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
         pass
 
     @abstractmethod
@@ -61,14 +61,14 @@ class TableBasedCritic(Critic):
         state_id = hash(tuple(state))
         self.eligibilities[state_id] = 1
 
-    def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
+    def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
         """
         computes the temporal difference error based on the reinforcement and value of a state
         :return: td error
         """
-        curr_state_id = hash(tuple(current_state))
+        state_id = hash(tuple(state))
         suc_state_id = hash(tuple(successor_state))
-        return reinforcement + (discount_rate * self.state_values[suc_state_id]) - self.state_values[curr_state_id]
+        return reinforcement + (discount_rate * self.state_values[suc_state_id]) - self.state_values[state_id]
 
     def update_value_function(self, state, td_error):
         """
@@ -106,7 +106,6 @@ class NNBasedCritic(Critic):
     def construct_nn(self):
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         model = tf.keras.models.Sequential()
-        model.add(tf.keras.layers.Flatten())
         for units in self.nn_dims:
             model.add(tf.keras.layers.Dense(units=units, activation=tf.nn.relu))
         model.compile(
@@ -123,13 +122,17 @@ class NNBasedCritic(Critic):
     def increase_eligibility(self, state):
         pass
 
-    def compute_td_error(self, current_state, successor_state, reinforcement, discount_rate):
-        return reinforcement + discount_rate * self.model.predict(successor_state) - self.model.predict(current_state)
+    def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
+        current_state = [state]
+        successor_state = [successor_state]
+        v_succ = self.model.predict(successor_state)[0,0]
+        v_curr = self.model.predict(current_state)[0,0]
+        return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, state, td_error):
-        # pred = self.model.predict(successor_state)
+        # pred = self.model.predict([successor_state])[0,0]
         # target = reinforcement + discount_rate * pred
-        # self.model.train(current_state, target)
+        # self.model.fit([state], [target])
         pass
 
     # not required
