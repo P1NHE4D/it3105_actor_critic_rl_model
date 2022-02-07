@@ -1,4 +1,4 @@
-from rl.environment import Domain
+from rl.env import Domain
 import numpy as np
 
 max_row = 4
@@ -27,14 +27,16 @@ class Labyrinth(Domain):
     def __init__(self):
         self.states = []
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         self.states = []
-        state = (start_row, start_col)
+        state = [start_row, start_col]
         self.states.append(state)
         actions = get_actions(start_row, start_col)
-        return state.__hash__(), actions
+        r = np.zeros((max_row + 1, max_col + 1))
+        r[start_row, start_col] = 1
+        return r.flatten(), actions
 
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         state = self.states[-1]
         row = state[0]
         col = state[1]
@@ -49,14 +51,13 @@ class Labyrinth(Domain):
 
         actions = get_actions(row, col)
 
-        successor = (row, col)
+        successor = [row, col]
         self.states.append(successor)
 
-        if row == goal_row and col == goal_col:
-            reinforcement = 9
-        else:
-            reinforcement = -1
-        return successor.__hash__(), actions, reinforcement
+        reinforcement = -1
+        r = np.zeros((max_row + 1, max_col + 1))
+        r[row, col] = 1
+        return r.flatten(), actions, reinforcement
 
     def is_current_state_terminal(self):
         state = self.states[-1]
