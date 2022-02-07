@@ -87,13 +87,14 @@ class NNBasedCritic(Critic):
         self.learning_rate = learning_rate
         self.nn_dims = nn_dims
         self.model = self.construct_nn()
-        self.target = 0
+        self.target = np.array([])
 
     def construct_nn(self):
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         model = tf.keras.models.Sequential()
         for units in self.nn_dims:
             model.add(tf.keras.layers.Dense(units=units, activation=tf.nn.relu))
+        model.add(tf.keras.layers.Dense(units=1))
         model.compile(
             optimizer=optimizer,
             loss='mse'
@@ -113,12 +114,24 @@ class NNBasedCritic(Critic):
         successor_state = np.array([successor_state])
         v_succ = self.model.predict(successor_state)[0, 0]
         v_curr = self.model.predict(current_state)[0, 0]
-        self.target = reinforcement + discount_rate * v_succ
+        self.target = np.append(self.target, reinforcement + discount_rate * v_succ)
         return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, episode):
-        states = list(map(lambda e: e[0], episode))
-        self.model.fit(np.array(states), np.full((len(states)), self.target))
+        # states = list(map(lambda e: e[0], episode)) # episode: [(state, action), ...]
+        x = np.array([np.array(episode[-1][0])])
+        y = self.target[-1].reshape(-1, 1)
+        if len(episode) == 1:
+            print("PREDICTION: {}".format(self.model.predict(x)))
+        # if x.shape[0] != y.shape[0]:
+        #     print(x.shape)
+        #     print(y.shape)
+        #     x = x[:-1]
+        #     print(x.shape)
+        #     print(y.shape)
+        self.model.fit(x, y, verbose=3)
+        if len(episode) == 1:
+            print("PREDICTION AFTER FIT: {}".format(self.model.predict(x)))
 
     # not required
     def update_eligibilities(self, episode, discount_rate, decay_factor):

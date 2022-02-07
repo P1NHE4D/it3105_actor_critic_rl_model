@@ -52,6 +52,7 @@ class ACM:
 
             # initialise an empty episode
             episode = []
+            critic.target = np.array([])
 
             step = 0
             while step < self.steps and not domain.is_current_state_terminal():

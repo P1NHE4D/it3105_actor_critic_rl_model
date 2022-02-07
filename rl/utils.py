@@ -1,7 +1,7 @@
 from collections import UserDict, Callable
 
 
-class DefaultValueTable(UserDict):
+class DefaultValueTable(dict):
 
     def __init__(self, val_func: Callable, **kwargs):
         super().__init__(**kwargs)
