@@ -1,15 +1,11 @@
 from dataclasses import dataclass
 import numpy as np
-from rl.environment import Domain
+from rl.env import Domain
 import matplotlib.pyplot as plt
 
 
-@dataclass(frozen=True)
-class GamblerState:
-    units: int
-
-    def get_actions(self):
-        return np.arange(start=1, stop=min(self.units, 100 - self.units) + 1)
+def get_actions(units):
+    return np.arange(start=1, stop=min(units, 100 - units) + 1)
 
 
 class Gambler(Domain):
@@ -20,37 +16,39 @@ class Gambler(Domain):
         self.episode_count = 0
         self.state_count = []
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         self.states = []
         self.episode_count += 1
-        units = np.random.random_integers(1, 99)
-        state = GamblerState(units=units)
+        units = np.random.randint(1, 99+1)
+        state = [units]
         self.states.append(state)
-        actions = state.get_actions()
-        return state.__hash__(), actions
+        actions = get_actions(units)
+        one_hot_state = np.zeros(101)
+        one_hot_state[units] = 1
+        return one_hot_state, actions
 
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         outcome = np.random.choice([-action, action], p=[1-self.win_prob, self.win_prob])
-        units = self.states[-1].units + outcome
-        state = GamblerState(units=units)
+        units = self.states[-1][0] + outcome
+        state = [units]
         self.states.append(state)
-        actions = state.get_actions()
+        actions = get_actions(units)
 
         if units <= 0:
             reinforcement = -100
-        elif units >= self.states[-2].units:
+        elif units >= self.states[0][0]:
             reinforcement = 1
         else:
             reinforcement = -1
 
-        return state.__hash__(), actions, reinforcement
+        one_hot_state = np.zeros(101)
+        one_hot_state[units] = 1
+        return one_hot_state, actions, reinforcement
 
     def is_current_state_terminal(self):
-        units = self.states[-1].units
+        units = self.states[-1][0]
         a = (units <= 0)
         b = (units >= 100)
-        if a or b:
-            self.state_count.append(len(self.states))
 
         return a or b
 
