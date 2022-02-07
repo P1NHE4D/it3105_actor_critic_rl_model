@@ -90,6 +90,7 @@ class ACM:
             self.epsilon *= self.epsilon_decay
             if any(map(lambda x: x == episode_count, self.visualise)):
                 domain.visualise()
+                actor.visualize_policy()
 
             # update progressbar
 

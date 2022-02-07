@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from matplotlib import pyplot as plt
 
 from rl.utils import DefaultValueTable
 
@@ -33,6 +34,8 @@ class TableBasedActor:
         :param
         :return: an action
         """
+        if len(actions) == 0:
+            return None
         state_id = hash(tuple(state))
         if np.random.choice(np.array([0, 1]), p=[1 - self.epsilon, self.epsilon]) == 1:
             return np.random.choice(np.array(actions))
@@ -68,3 +71,15 @@ class TableBasedActor:
         for state, action in episode:
             state_id = hash(tuple(state))
             self.eligibilities[(state_id, action)] *= discount_rate * decay_factor
+
+
+    def visualize_policy(self):
+        states = np.arange(1, 99+1)
+        opt_val = []
+        for state in states:
+            s = np.zeros(101)
+            s[state] = 1
+            action = np.arange(start=1, stop=min(state, 100 - state) + 1)
+            opt_val.append(self.propose_action(s, action))
+        plt.plot(states, opt_val)
+        plt.show()
