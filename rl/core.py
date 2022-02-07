@@ -19,7 +19,6 @@ class ACM:
         self.epsilon = config["epsilon"]
         self.epsilon_decay = config["epsilon_decay"]
         self.visualise = config["visualise"]
-        self.discretize = config["discretize"]
 
     def fit(self, domain: Domain):
         """
@@ -42,9 +41,9 @@ class ACM:
         progress = tqdm(range(self.max_episodes), desc="Episode", colour="green")
         for episode_count in progress:
 
-            # reset eligibilities
-            actor.reset_eligibilities()
-            critic.reset_eligibilities()
+            # reset actor and critic
+            actor.reset()
+            critic.reset()
 
             # get initial state and action
             current_state, actions = domain.get_init_state()
@@ -52,7 +51,6 @@ class ACM:
 
             # initialise an empty episode
             episode = []
-            critic.target = np.array([])
 
             step = 0
             while step < self.steps and not domain.is_current_state_terminal():

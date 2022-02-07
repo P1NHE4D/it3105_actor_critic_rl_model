@@ -1,6 +1,6 @@
 {
   "episodes": 200,
-  "steps": 20,
+  "steps": 40,
   "critic_type": "nn",
   "critic_nn_dims": [16, 8],
   "actor_lr": 0.1,

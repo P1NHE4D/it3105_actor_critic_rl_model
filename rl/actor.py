@@ -14,7 +14,7 @@ class TableBasedActor:
         self.learning_rate = learning_rate
         self.epsilon = epsilon
 
-    def reset_eligibilities(self):
+    def reset(self):
         """
         Resets the eligibility for every state-action pair to 0
         """

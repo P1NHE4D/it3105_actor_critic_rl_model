@@ -7,7 +7,7 @@ from rl.utils import DefaultValueTable
 class Critic(ABC):
 
     @abstractmethod
-    def reset_eligibilities(self):
+    def reset(self):
         pass
 
     @abstractmethod
@@ -36,7 +36,7 @@ class TableBasedCritic(Critic):
         self.learning_rate = learning_rate
         self.td_error = 0
 
-    def reset_eligibilities(self):
+    def reset(self):
         """
         Resets all eligibilities to 0
         """
@@ -87,7 +87,7 @@ class NNBasedCritic(Critic):
         self.learning_rate = learning_rate
         self.nn_dims = nn_dims
         self.model = self.construct_nn()
-        self.target = np.array([])
+        self.targets = []
 
     def construct_nn(self):
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
@@ -101,9 +101,8 @@ class NNBasedCritic(Critic):
         )
         return model
 
-    # not required
-    def reset_eligibilities(self):
-        pass
+    def reset(self):
+        self.targets = []
 
     # not required
     def increase_eligibility(self, state):
@@ -114,24 +113,11 @@ class NNBasedCritic(Critic):
         successor_state = np.array([successor_state])
         v_succ = self.model.predict(successor_state)[0, 0]
         v_curr = self.model.predict(current_state)[0, 0]
-        self.target = np.append(self.target, reinforcement + discount_rate * v_succ)
+        self.targets.append(reinforcement + discount_rate * v_succ)
         return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, episode):
-        # states = list(map(lambda e: e[0], episode)) # episode: [(state, action), ...]
-        x = np.array([np.array(episode[-1][0])])
-        y = self.target[-1].reshape(-1, 1)
-        if len(episode) == 1:
-            print("PREDICTION: {}".format(self.model.predict(x)))
-        # if x.shape[0] != y.shape[0]:
-        #     print(x.shape)
-        #     print(y.shape)
-        #     x = x[:-1]
-        #     print(x.shape)
-        #     print(y.shape)
-        self.model.fit(x, y, verbose=3)
-        if len(episode) == 1:
-            print("PREDICTION AFTER FIT: {}".format(self.model.predict(x)))
+        self.model.fit(np.array(list(map(lambda e: e[0], episode))), np.array(self.targets), verbose=3)
 
     # not required
     def update_eligibilities(self, episode, discount_rate, decay_factor):
