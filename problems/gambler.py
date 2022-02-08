@@ -52,6 +52,13 @@ class Gambler(Domain):
 
         return a or b
 
-    def visualise(self):
-        # TODO
-        pass
+    def visualise(self, actor):
+        states = np.arange(1, 99 + 1)
+        opt_val = []
+        for state in states:
+            s = np.zeros(101)
+            s[state] = 1
+            action = np.arange(start=1, stop=min(state, 100 - state) + 1)
+            opt_val.append(actor.propose_action(s, action))
+        plt.plot(states, opt_val)
+        plt.show()
