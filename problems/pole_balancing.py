@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
@@ -36,13 +37,14 @@ class PoleBalancing(Domain):
         self.location_bins = compute_bins(*config["bins"]["location"])
         self.angle_bins = compute_bins(*config["bins"]["angle"])
         self.angle_td_bins = compute_bins(*config["bins"]["angle_td"])
-        self.angle_tdd_bins = compute_bins(*config["bins"]["angle_tdd"])
         self.states: [Cart] = []
         self.episode_count = 0
         self.step_count = []
         self.best_episode = []
         self.discretize = True
         self.real_states = []
+        self.maxes = [-math.inf, -math.inf, -math.inf, -math.inf]
+        self.mins = [math.inf, math.inf, math.inf, math.inf]
 
     def get_init_state(self):
         self.states = []
@@ -124,6 +126,17 @@ class PoleBalancing(Domain):
         c = len(self.states) > self.max_timesteps
 
         if a or b or c:
+            # self.maxes[0] = max([self.maxes[0], max(list(map(lambda x: x.velocity, self.states)))])
+            # self.maxes[1] = max([self.maxes[1], max(list(map(lambda x: x.location, self.states)))])
+            # self.maxes[2] = max([self.maxes[2], max(list(map(lambda x: x.angle, self.states)))])
+            # self.maxes[3] = max([self.maxes[3], max(list(map(lambda x: x.angle_td, self.states)))])
+            # self.mins[0] = min([self.mins[0], min(list(map(lambda x: x.velocity, self.states)))])
+            # self.mins[1] = min([self.mins[1], min(list(map(lambda x: x.location, self.states)))])
+            # self.mins[2] = min([self.mins[2], min(list(map(lambda x: x.angle, self.states)))])
+            # self.mins[3] = min([self.mins[3], min(list(map(lambda x: x.angle_td, self.states)))])
+            # print("MAXES: {} | MINS: {}".format(self.maxes, self.mins))
+
+
             self.step_count.append(len(self.states))
             self.episode_count += 1
             if len(self.states) >= len(self.best_episode):
@@ -140,21 +153,20 @@ class PoleBalancing(Domain):
         plt.xlabel("Timestep")
         plt.ylabel("Angle")
         plt.show()
-        plt.plot(np.arange(1, len(self.best_episode) + 1), list(map(lambda x: x.location, self.best_episode)))
-        plt.xlabel("Timestep")
-        plt.ylabel("Location")
-        plt.show()
 
     def compute_reinforcement(self, state: Cart):
         if abs(state.angle) > self.angle_magnitude:
-            return -1000
+            return -100
         if state.location < self.left_boundary or state.location > self.right_boundary:
-            return -1000
-        return len(self.states)
+            return -100
+        if len(self.states) > self.max_timesteps:
+            return 100
+        return len(self.states) * 0.01
 
 
 def compute_bins(start, stop, count):
-    return np.arange(start, stop, (abs(start) + abs(stop)) / count)
+    # step = (abs(start) + abs(stop)) / count
+    return np.linspace(start, stop, count)
 
 
 def discretize_value(value, bins):
