@@ -16,5 +16,5 @@ class Domain(ABC):
         pass
 
     @abstractmethod
-    def visualise(self):
+    def visualise(self, actor):
         pass

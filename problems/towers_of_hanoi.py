@@ -155,7 +155,7 @@ class TowersOfHanoi(Domain):
     def is_current_state_terminal(self):
         return is_success(self.states[-1])
 
-    def visualise(self):
+    def visualise(self, actor):
         # TODO matplotlib :)
         for i, state in enumerate(self.states):
             print(f"state {i}:")
