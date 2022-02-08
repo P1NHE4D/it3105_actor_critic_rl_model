@@ -1,7 +1,7 @@
-import math
 from dataclasses import dataclass
+
 import matplotlib.pyplot as plt
-from rl.environment import Domain
+from rl.env import Domain
 from math import cos, sin
 import numpy as np
 
@@ -14,7 +14,9 @@ class Cart:
     location: float
     angle: float
     angle_td: float
-    angle_tdd: float
+
+    def to_list(self):
+        return [self.velocity, self.location, self.angle, self.angle_td]
 
 
 class PoleBalancing(Domain):
@@ -51,7 +53,6 @@ class PoleBalancing(Domain):
             location=0,
             angle=angle,
             angle_td=0,
-            angle_tdd=0
         ))
         if self.discretize:
             angle = discretize_value(angle, self.angle_bins)
@@ -60,10 +61,9 @@ class PoleBalancing(Domain):
             location=0,
             angle=angle,
             angle_td=0,
-            angle_tdd=0
         )
         self.states.append(init_state)
-        return init_state.__hash__(), ACTIONS
+        return init_state.to_list(), ACTIONS
 
     def generate_child_state(self, action):
         state = self.real_states[-1]
@@ -75,7 +75,7 @@ class PoleBalancing(Domain):
             pole_mass=self.pole_mass,
             pole_length=self.pole_length,
             angle=state.angle,
-            angle_tdd=state.angle_tdd,
+            angle_td=state.angle_td,
             cart_mass=self.cart_mass
         )
         acceleration = compute_acceleration(
@@ -85,7 +85,7 @@ class PoleBalancing(Domain):
             cart_mass=self.cart_mass,
             angle=state.angle,
             angle_td=state.angle_td,
-            angle_tdd=state.angle_tdd
+            angle_tdd=angle_tdd
         )
         angle_td = state.angle_td + self.timestep * angle_tdd
         velocity = state.velocity + self.timestep * acceleration
@@ -93,32 +93,29 @@ class PoleBalancing(Domain):
         location = state.location + self.timestep * velocity
 
         self.real_states.append(Cart(
-            angle=angle,
-            angle_td=angle_td,
-            angle_tdd=angle_tdd,
             velocity=velocity,
-            location=location
+            location=location,
+            angle=angle,
+            angle_td=angle_td
         ))
 
         if self.discretize:
             angle = discretize_value(angle, self.angle_bins)
             angle_td = discretize_value(angle_td, self.angle_td_bins)
-            angle_tdd = discretize_value(angle_tdd, self.angle_tdd_bins)
             velocity = discretize_value(velocity, self.velocity_bins)
             location = discretize_value(location, self.location_bins)
 
         successor = Cart(
-            angle=angle,
-            angle_td=angle_td,
-            angle_tdd=angle_tdd,
             velocity=velocity,
-            location=location
+            location=location,
+            angle=angle,
+            angle_td=angle_td
         )
         self.states.append(successor)
 
         reinforcement = self.compute_reinforcement(successor)
 
-        return successor.__hash__(), ACTIONS, reinforcement
+        return successor.to_list(), ACTIONS, reinforcement
 
     def is_current_state_terminal(self):
         state: Cart = self.real_states[-1]
@@ -164,8 +161,8 @@ def discretize_value(value, bins):
     return bins[min([np.digitize(value, bins), len(bins) - 1])]
 
 
-def compute_angle_tdd(gravity, angle, bb_force, pole_mass, pole_length, angle_tdd, cart_mass):
-    uu = cos(angle) * (-bb_force - pole_mass * pole_length * angle_tdd * sin(angle))
+def compute_angle_tdd(gravity, angle, bb_force, pole_mass, pole_length, angle_td, cart_mass):
+    uu = cos(angle) * (-bb_force - pole_mass * pole_length * np.square(angle_td) * sin(angle))
     ub = pole_mass + cart_mass
     u = gravity * sin(angle) + (uu / ub)
     bu = pole_mass * cos(angle) ** 2
