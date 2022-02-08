@@ -44,7 +44,7 @@ class PoleBalancing(Domain):
         self.discretize = True
         self.real_states = []
 
-    def produce_initial_state(self):
+    def get_init_state(self):
         self.states = []
         self.real_states = []
         angle = np.random.uniform(-self.angle_magnitude, self.angle_magnitude)
@@ -65,7 +65,7 @@ class PoleBalancing(Domain):
         self.states.append(init_state)
         return init_state.to_list(), ACTIONS
 
-    def generate_child_state(self, action):
+    def get_child_state(self, action):
         state = self.real_states[-1]
         bb_force = -self.force if action == "left" else self.force
 
