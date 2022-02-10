@@ -42,23 +42,20 @@ class State:
         total_disks = sum([len(peg.disks) for peg in self.pegs])
         total_pegs = len(self.pegs)
 
-        # array of the following pattern repeated for each disk, in increasing disk size
-        #  total_pegs elements describing which peg the disk is on
-        #  total_disks elements describing at what height the disc is on
-        ohe = np.zeros((total_disks * (total_pegs + total_disks)))
+        # array of OHE peg placement of each disk, in increasing disk size
+        # peg placement for peg i encoded as an N length array where the ith
+        # element is 1, the rest is 0.
+        # originally the order of disks on pegs was encoded as well, but through
+        # https://www.cs.colostate.edu/~anderson/wp/pubs/Tower-of-Hanoi-1989.pdf
+        # we realized this was not necessary, as any other order than smaller to larger is illegal
+        ohe = np.zeros((total_disks * total_pegs))
         for curr_peg_i, peg in enumerate(self.pegs):
-            for curr_disk_i, disk in enumerate(peg.disks):
+            for disk in peg.disks:
                 size = disk.Size
-                # calculate of disk within OHE based on size
-                ohe_start_pos = size * (total_pegs + total_disks)
-                # calculate start of OHE describing current disk peg
-                ohe_peg_pos = ohe_start_pos
-                # calculate start of OHE describing current disk height on peg
-                ohe_height_pos = ohe_start_pos + total_pegs
-
-                ohe[ohe_peg_pos + curr_peg_i] = 1
-                ohe[ohe_height_pos + curr_disk_i] = 1
-
+                # calculate position in OHE where this disk's peg placement should be put
+                ohe_disk_pos = size * total_pegs
+                # encode peg placement
+                ohe[ohe_disk_pos + curr_peg_i] = 1
         return ohe
 
 
