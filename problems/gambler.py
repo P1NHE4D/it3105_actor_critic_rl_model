@@ -36,10 +36,10 @@ class Gambler(Domain):
 
         if units <= 0:
             reinforcement = -100
-        elif units >= self.states[0][0]:
-            reinforcement = 1
+        elif units >= 100:
+            reinforcement = 100
         else:
-            reinforcement = -1
+            reinforcement = 0
 
         one_hot_state = np.zeros(101)
         one_hot_state[units] = 1
