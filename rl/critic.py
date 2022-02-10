@@ -88,6 +88,7 @@ class NNBasedCritic(Critic):
         self.nn_dims = nn_dims
         self.model = self.construct_nn()
         self.targets = []
+        self.episode = []
 
     def construct_nn(self):
         optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
@@ -102,6 +103,10 @@ class NNBasedCritic(Critic):
         return model
 
     def reset(self):
+        # TODO: not optimal - find a better solution
+        if len(self.episode) > 0:
+            self.model.fit(np.array(list(map(lambda e: e[0], self.episode))), np.array(self.targets), verbose=3)
+        self.episode = []
         self.targets = []
 
     # not required
@@ -117,7 +122,8 @@ class NNBasedCritic(Critic):
         return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, episode):
-        self.model.fit(np.array(list(map(lambda e: e[0], episode))), np.array(self.targets), verbose=3)
+        # TODO: not optimal - find a better solution
+        self.episode = episode
 
     # not required
     def update_eligibilities(self, episode, discount_rate, decay_factor):
