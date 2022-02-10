@@ -1,3 +1,5 @@
+import numpy as np
+
 from rl.env import Domain
 from dataclasses import dataclass
 from copy import deepcopy
@@ -25,10 +27,8 @@ class Peg:
     """
     disks: list[Disk]
 
-    def __hash__(self):
-        # hash by converting to tuple
-        hashed_disks = [hash(disk) for disk in self.disks]
-        return hash(tuple(hashed_disks))
+    def vector(self):
+        return np.array([disk.Size for disk in self.disks])
 
 
 @dataclass
@@ -38,10 +38,29 @@ class State:
     """
     pegs: list[Peg]
 
-    def __hash__(self):
-        # hash by converting to tuple
-        hashed_pegs = [hash(peg) for peg in self.pegs]
-        return hash(tuple(hashed_pegs))
+    def vector(self):
+        total_disks = sum([len(peg.disks) for peg in self.pegs])
+        total_pegs = len(self.pegs)
+
+        # array of the following pattern repeated for each disk, in increasing disk size
+        #  total_pegs elements describing which peg the disk is on
+        #  total_disks elements describing at what height the disc is on
+        ohe = np.zeros((total_disks * (total_pegs + total_disks)))
+        for curr_peg_i, peg in enumerate(self.pegs):
+            for curr_disk_i, disk in enumerate(peg.disks):
+                size = disk.Size
+                # calculate of disk within OHE based on size
+                ohe_start_pos = size * (total_pegs + total_disks)
+                # calculate start of OHE describing current disk peg
+                ohe_peg_pos = ohe_start_pos
+                # calculate start of OHE describing current disk height on peg
+                ohe_height_pos = ohe_start_pos + total_pegs
+
+                ohe[ohe_peg_pos + curr_peg_i] = 1
+                ohe[ohe_height_pos + curr_disk_i] = 1
+
+        return ohe
+
 
 
 @dataclass
@@ -75,7 +94,7 @@ def legal_actions(state: State):
 
     # TODO this loop is an imperative mutating mess
 
-    # for each peg, add an action to move it's top disk (if there is one) to
+    # for each peg, add an action to move its top disk (if there is one) to
     # each other peg that has a smaller disk (or no disk)
     for idx_from, peg_from in enumerate(state.pegs):
         if len(peg_from.disks) == 0:
@@ -131,12 +150,12 @@ class TowersOfHanoi(Domain):
         self.states = None
 
     def get_current_state(self):
-        return self.states[-1], legal_actions(self.states[-1])
+        return self.states[-1].vector(), legal_actions(self.states[-1])
 
     def get_init_state(self):
         # prepare initial state as one where all disks are on the first peg,
         # with smaller disks atop larger disks
-        disks = list(range(self.num_disks))
+        disks = [Disk(Size=s) for s in list(range(self.num_disks))]
         firstPeg = Peg(disks=disks)
         restPegs = [Peg(disks=[]) for _ in range(self.num_pegs - 1)]
         pegs = [firstPeg] + restPegs

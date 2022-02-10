@@ -1,4 +1,5 @@
 {
+  "problem": "gambler",
   "episodes": 3000,
   "steps": 300,
   "critic_type": "table",
