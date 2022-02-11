@@ -9,7 +9,7 @@ import json
 
 
 def main():
-    config_file = 'default.json'
+    config_file = 'rl-config.json'
     if len(sys.argv) >= 2:
         config_file = sys.argv[1]
     with open(config_file) as f:
