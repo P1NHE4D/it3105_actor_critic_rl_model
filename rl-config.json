@@ -1,5 +1,8 @@
 {
   "problem": "gambler",
+  "problem_params": {
+    "win_prob": 0.5
+  },
   "episodes": 3000,
   "steps": 300,
   "critic_type": "table",
