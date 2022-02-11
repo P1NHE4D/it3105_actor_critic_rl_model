@@ -105,7 +105,9 @@ class NNBasedCritic(Critic):
     def reset(self):
         # TODO: not optimal - find a better solution
         if len(self.episode) > 0:
-            self.model.fit(np.array(list(map(lambda e: e[0], self.episode))), np.array(self.targets), verbose=3)
+            x = tf.convert_to_tensor(list(map(lambda e: e[0], self.episode)))
+            y = tf.convert_to_tensor(self.targets)
+            self.model.fit(x, y, verbose=3)
         self.episode = []
         self.targets = []
 
@@ -114,10 +116,10 @@ class NNBasedCritic(Critic):
         pass
 
     def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
-        current_state = np.array([state])
-        successor_state = np.array([successor_state])
-        v_succ = self.model.predict(successor_state)[0, 0]
-        v_curr = self.model.predict(current_state)[0, 0]
+        current_state = tf.convert_to_tensor([state])
+        successor_state = tf.convert_to_tensor([successor_state])
+        v_succ = self.model(successor_state)[0, 0]
+        v_curr = self.model(current_state)[0, 0]
         self.targets.append(reinforcement + discount_rate * v_succ)
         return reinforcement + discount_rate * v_succ - v_curr
 
