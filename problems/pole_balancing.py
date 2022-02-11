@@ -144,7 +144,6 @@ class PoleBalancing(Domain):
         a = abs(state.angle) > self.angle_magnitude
         b = state.location < self.left_boundary
         c = state.location > self.right_boundary
-        d = len(self.states) > self.max_timesteps
         if a or b or c:
             return -100
         return 0
