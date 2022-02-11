@@ -1,0 +1,18 @@
+{
+  "problem": "towers",
+  "problem_params": {
+    "num_disks": 3,
+    "num_pegs": 3
+  },
+  "episodes": 20,
+  "steps": 60,
+  "critic_type": "nn",
+  "critic_nn_dims": [],
+  "actor_lr": 0.2,
+  "critic_lr": 0.2,
+  "decay": 0.9,
+  "discount": 0.9,
+  "epsilon": 0.2,
+  "epsilon_decay": 0.9,
+  "visualise": [1, 99, 199, 299, 1000]
+}

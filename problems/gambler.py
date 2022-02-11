@@ -10,8 +10,8 @@ def get_actions(units):
 
 class Gambler(Domain):
 
-    def __init__(self, config):
-        self.win_prob = config.get("win_prob", 0.5)
+    def __init__(self, win_prob=0.5):
+        self.win_prob = win_prob
         self.states = []
         self.episode_count = 0
         self.state_count = []
@@ -43,7 +43,6 @@ class Gambler(Domain):
 
         one_hot_state = np.zeros(101)
         one_hot_state[units] = 1
-        print(units)
         return one_hot_state, actions, reinforcement
 
     def is_current_state_terminal(self):
