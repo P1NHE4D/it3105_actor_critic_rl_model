@@ -23,7 +23,7 @@ class Gambler(Domain):
         state = [units]
         self.states.append(state)
         actions = get_actions(units)
-        one_hot_state = np.zeros(100)
+        one_hot_state = np.zeros(101)
         one_hot_state[units] = 1
         return one_hot_state, actions
 
@@ -43,6 +43,7 @@ class Gambler(Domain):
 
         one_hot_state = np.zeros(101)
         one_hot_state[units] = 1
+        print(units)
         return one_hot_state, actions, reinforcement
 
     def is_current_state_terminal(self):
