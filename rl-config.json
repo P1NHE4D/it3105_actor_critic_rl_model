@@ -1,17 +1,32 @@
 {
-  "problem": "gambler",
+  "problem": "pole",
   "problem_params": {
-    "win_prob": 0.5
+    "cart_mass": 1,
+    "pole_mass": 0.1,
+    "pole_length": 0.5,
+    "force": 10,
+    "gravity": -9.8,
+    "timestep": 0.02,
+    "angle_magnitude": 0.21,
+    "left_boundary": -2.4,
+    "right_boundary": 2.4,
+    "max_timesteps": 300,
+    "bins": {
+      "velocity": [-3, 3, 6],
+      "location": [-3, 3, 6],
+      "angle": [-0.3, 0.3, 8],
+      "angle_td": [-4, 4, 8]
+    }
   },
-  "episodes": 3000,
-  "steps": 300,
+  "episodes": 250,
+  "steps": 400,
   "critic_type": "table",
   "critic_nn_dims": [16, 8],
   "actor_lr": 0.1,
-  "critic_lr": 0.1,
+  "critic_lr": 0.01,
   "decay": 0.9,
-  "discount": 0.8,
-  "epsilon": 0.2,
-  "epsilon_decay": 0.995,
-  "visualise": [499, 999, 1999, 2999]
+  "discount": 0.9,
+  "epsilon": 0.1,
+  "epsilon_decay": 0.99,
+  "visualise": [99, 199, 249]
 }

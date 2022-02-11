@@ -1,16 +1,6 @@
 {
-  "episodes": 400,
-  "steps": 400,
-  "critic_type": "table",
-  "critic_nn_dims": [16, 8],
-  "actor_lr": 0.1,
-  "critic_lr": 0.01,
-  "decay": 0.9,
-  "discount": 0.9,
-  "epsilon": 0.1,
-  "epsilon_decay": 0.99,
-  "visualise": [199, 299, 399],
-  "pole_balancing": {
+  "problem": "pole",
+  "problem_params": {
     "cart_mass": 1,
     "pole_mass": 0.1,
     "pole_length": 0.5,
@@ -27,5 +17,16 @@
       "angle": [-0.3, 0.3, 8],
       "angle_td": [-4, 4, 8]
     }
-  }
+  },
+  "episodes": 250,
+  "steps": 400,
+  "critic_type": "table",
+  "critic_nn_dims": [16, 8],
+  "actor_lr": 0.1,
+  "critic_lr": 0.01,
+  "decay": 0.9,
+  "discount": 0.9,
+  "epsilon": 0.1,
+  "epsilon_decay": 0.99,
+  "visualise": [99, 199, 249]
 }
