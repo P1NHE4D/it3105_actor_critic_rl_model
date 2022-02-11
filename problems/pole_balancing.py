@@ -37,14 +37,11 @@ class PoleBalancing(Domain):
         self.location_bins = compute_bins(*config["bins"]["location"])
         self.angle_bins = compute_bins(*config["bins"]["angle"])
         self.angle_td_bins = compute_bins(*config["bins"]["angle_td"])
-        self.states: [Cart] = []
         self.episode_count = 0
         self.step_count = []
         self.best_episode = []
         self.discretize = True
         self.states = []
-        self.maxes = [-math.inf, -math.inf, -math.inf, -math.inf]
-        self.mins = [math.inf, math.inf, math.inf, math.inf]
 
     def get_init_state(self):
         self.states = []
