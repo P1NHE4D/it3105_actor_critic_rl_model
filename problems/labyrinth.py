@@ -63,7 +63,7 @@ class Labyrinth(Domain):
         state = self.states[-1]
         return state[0] == goal_row and state[1] == goal_col
 
-    def visualise(self):
+    def visualise(self, actor):
         field = np.full((max_row + 1, max_col + 1), '#')
         for row, col in self.states:
             field[row, col] = '+'
