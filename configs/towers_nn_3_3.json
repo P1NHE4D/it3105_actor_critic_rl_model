@@ -6,8 +6,8 @@
     "reward_success": 100,
     "reward_default": -1
   },
-  "episodes": 50,
-  "steps": 40,
+  "episodes": 1000,
+  "steps": 300,
   "critic_type": "nn",
   "critic_nn_dims": [8],
   "actor_lr": 0.05,
@@ -15,6 +15,6 @@
   "decay": 0.9,
   "discount": 0.9,
   "epsilon": 0.5,
-  "epsilon_decay": 0.95,
-  "visualise": [49]
+  "epsilon_decay": 0.999,
+  "visualise": [999]
 }
