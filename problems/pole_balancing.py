@@ -138,10 +138,9 @@ class PoleBalancing(Domain):
         plt.show()
 
     def compute_reinforcement(self, state: Cart):
-        a = abs(state.angle) > self.angle_magnitude
-        b = state.location < self.left_boundary
-        c = state.location > self.right_boundary
-        if a or b or c:
+        angle_out_of_bounds = abs(state.angle) > self.angle_magnitude
+        cart_out_of_bounds = state.location < self.left_boundary or state.location > self.right_boundary
+        if angle_out_of_bounds or cart_out_of_bounds:
             return -100
         return 0
 
