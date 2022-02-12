@@ -1,103 +1,169 @@
+import math
+from dataclasses import dataclass
+
+import matplotlib.pyplot as plt
 from rl.env import Domain
+from math import cos, sin
 import numpy as np
 
+ACTIONS = ["left", "right"]
 
-class PoleBalancingState:
 
-    def __init__(
-            self,
-            pole_angle,
-            pole_angle_fst_td,
-            pole_angle_sec_td,
-            horiz_loc,
-            horiz_vel,
-            horiz_acc,
-            timestep,
-    ):
-        super().__init__(["positive", "negative"])
-        self.pole_angle = pole_angle
-        self.pole_angle_fst_td = pole_angle_fst_td
-        self.pole_angle_sec_td = pole_angle_sec_td
-        self.horiz_loc = horiz_loc
-        self.horiz_vel = horiz_vel
-        self.horiz_acc = horiz_acc
-        self.timestep = timestep
+@dataclass(frozen=True)
+class Cart:
+    velocity: float
+    location: float
+    angle: float
+    angle_td: float
+
+    def to_list(self):
+        return [self.velocity, self.location, self.angle, self.angle_td]
 
 
 class PoleBalancing(Domain):
 
     def __init__(self, config):
-        self.pole_length = config["pole_length"]
-        self.pole_mass = config["pole_mass"]
         self.cart_mass = config["cart_mass"]
-        self.gravity = config["gravity"]
+        self.pole_mass = config["pole_mass"]
+        self.pole_length = config["pole_length"]
         self.force = config["force"]
-        self.pole_angle_magnitude = config["pole_angle_magnitude"]
-        self.left_cart_bound = config["left_cart_bound"]
-        self.right_cart_bound = config["right_cart_bound"]
-        self.sim_timestep = config["sim_timestep"]
+        self.gravity = config["gravity"]
+        self.angle_magnitude = config["angle_magnitude"]
+        self.timestep = config["timestep"]
+        self.left_boundary = config["left_boundary"]
+        self.right_boundary = config["right_boundary"]
         self.max_timesteps = config["max_timesteps"]
+        self.velocity_bins = compute_bins(*config["bins"]["velocity"])
+        self.location_bins = compute_bins(*config["bins"]["location"])
+        self.angle_bins = compute_bins(*config["bins"]["angle"])
+        self.angle_td_bins = compute_bins(*config["bins"]["angle_td"])
+        self.episode_count = 0
+        self.step_count = []
+        self.best_episode = []
+        self.discretize = True
+        self.states = []
 
     def get_init_state(self):
-        return PoleBalancingState(
-            pole_angle=np.random.uniform(-self.pole_angle_magnitude, self.pole_angle_magnitude, 1),
-            pole_angle_fst_td=0,
-            pole_angle_sec_td=0,
-            horiz_loc=(self.right_cart_bound - self.left_cart_bound) / 2,
-            horiz_vel=0,
-            horiz_acc=0,
-            timestep=1
+        self.states = []
+        angle = np.random.uniform(-self.angle_magnitude, self.angle_magnitude)
+        init_state = Cart(
+            velocity=0,
+            location=0,
+            angle=angle,
+            angle_td=0,
         )
+        self.states.append(init_state)
 
-    def get_child_state(self, state: PoleBalancingState, action):
-        # determining bang-bang force based on the selected action
-        bb_force = self.force if action == "positive" else -self.force
+        if self.discretize:
+            angle = discretize_value(angle, self.angle_bins)
 
-        # second temporal derivative of the pole angle
-        r1_tt = np.cos(state.pole_angle) * (-bb_force - self.pole_mass * self.pole_length * state.pole_angle_sec_td * np.sin(state.pole_angle))
-        r1_tb = self.pole_mass + self.cart_mass
-        r1_bt = self.pole_mass * np.square(np.cos(state.pole_angle))
-        r1_bb = self.pole_mass + self.cart_mass
-        pole_angle_sec_td = (self.gravity * np.sin(state.pole_angle) + (r1_tt/r1_tb)) / (self.pole_length * ((4 / 3) - (r1_bt / r1_bb)))
+        return Cart(
+            velocity=0,
+            location=0,
+            angle=angle,
+            angle_td=0,
+        ).to_list(), ACTIONS
 
-        # horizontal acceleration of the cart
-        r2_t = bb_force + self.pole_mass * self.pole_length * (np.square(state.pole_angle_fst_td) * np.sin(state.pole_angle) - pole_angle_sec_td * np.cos(state.pole_angle))
-        r2_b = self.pole_mass + self.cart_mass
-        horiz_acc = r2_t / r2_b
+    def get_child_state(self, action):
+        state = self.states[-1]
+        bb_force = -self.force if action == "left" else self.force
 
-        # first temporal derivative of the pole angle
-        pole_angle_fst_td = state.pole_angle_fst_td + self.sim_timestep * pole_angle_sec_td
+        angle_tdd = compute_angle_tdd(
+            gravity=self.gravity,
+            bb_force=bb_force,
+            pole_mass=self.pole_mass,
+            pole_length=self.pole_length,
+            angle=state.angle,
+            angle_td=state.angle_td,
+            cart_mass=self.cart_mass
+        )
+        acceleration = compute_acceleration(
+            bb_force=bb_force,
+            pole_mass=self.pole_mass,
+            pole_length=self.pole_length,
+            cart_mass=self.cart_mass,
+            angle=state.angle,
+            angle_td=state.angle_td,
+            angle_tdd=angle_tdd
+        )
+        angle_td = state.angle_td + self.timestep * angle_tdd
+        velocity = state.velocity + self.timestep * acceleration
+        angle = state.angle + self.timestep * angle_td
+        location = state.location + self.timestep * velocity
 
-        # horizontal velocity of the cart
-        horiz_vel = state.horiz_vel + self.sim_timestep * horiz_acc
+        successor = Cart(
+            velocity=velocity,
+            location=location,
+            angle=angle,
+            angle_td=angle_td
+        )
+        self.states.append(successor)
+        reinforcement = self.compute_reinforcement(successor)
 
-        # pole angle
-        pole_angle = state.pole_angle + self.sim_timestep * pole_angle_fst_td
+        if self.discretize:
+            angle = discretize_value(angle, self.angle_bins)
+            angle_td = discretize_value(angle_td, self.angle_td_bins)
+            velocity = discretize_value(velocity, self.velocity_bins)
+            location = discretize_value(location, self.location_bins)
 
-        # horizontal location of the cart
-        horiz_loc = state.horiz_loc + self.sim_timestep * horiz_vel
+        return Cart(
+            velocity=velocity,
+            location=location,
+            angle=angle,
+            angle_td=angle_td
+        ).to_list(), ACTIONS, reinforcement
 
-        # update timestep
-        timestep = state.timestep + 1
+    def is_current_state_terminal(self):
+        state: Cart = self.states[-1]
+        a = abs(state.angle) > self.angle_magnitude
+        b = (state.location < self.left_boundary) or (state.location > self.right_boundary)
+        c = len(self.states) > self.max_timesteps
 
-        # compute reinforcement
-        # TODO: needs to be optimised
-        if np.abs(pole_angle) > self.pole_angle_magnitude and timestep < self.max_timesteps:
-            reinforcement = -10
-        elif timestep >= self.max_timesteps:
-            reinforcement = 10
-        else:
-            reinforcement = timestep * 0.01
+        if a or b or c:
+            self.step_count.append(len(self.states))
+            self.episode_count += 1
+            if len(self.states) >= len(self.best_episode):
+                self.best_episode = self.states
 
-        return PoleBalancingState(
-            pole_angle=pole_angle,
-            pole_angle_fst_td=pole_angle_fst_td,
-            pole_angle_sec_td=pole_angle_sec_td,
-            horiz_loc=horiz_loc,
-            horiz_vel=horiz_vel,
-            horiz_acc=horiz_acc,
-            timestep=timestep
-        ), reinforcement
+        return a or b or c
 
-    def is_current_state_terminal(self, state: PoleBalancingState):
-        return np.abs(state.pole_angle) > self.pole_angle_magnitude or state.timestep >= self.max_timesteps
+    def visualise(self, actor):
+        plt.plot(np.arange(1, self.episode_count + 1), self.step_count)
+        plt.xlabel("Episode")
+        plt.ylabel("Timestep")
+        plt.show()
+        plt.plot(np.arange(1, len(self.best_episode) + 1), list(map(lambda x: x.angle, self.best_episode)))
+        plt.xlabel("Timestep")
+        plt.ylabel("Angle")
+        plt.show()
+
+    def compute_reinforcement(self, state: Cart):
+        angle_out_of_bounds = abs(state.angle) > self.angle_magnitude
+        cart_out_of_bounds = state.location < self.left_boundary or state.location > self.right_boundary
+        if angle_out_of_bounds or cart_out_of_bounds:
+            return -100
+        return 0
+
+
+def compute_bins(start, stop, count):
+    return np.linspace(start, stop, count)
+
+
+def discretize_value(value, bins):
+    return bins[min([np.digitize(value, bins), len(bins) - 1])]
+
+
+def compute_angle_tdd(gravity, angle, bb_force, pole_mass, pole_length, angle_td, cart_mass):
+    uu = cos(angle) * (-bb_force - pole_mass * pole_length * np.square(angle_td) * sin(angle))
+    ub = pole_mass + cart_mass
+    u = gravity * sin(angle) + (uu / ub)
+    bu = pole_mass * cos(angle) ** 2
+    bb = pole_mass + cart_mass
+    b = pole_length * ((4 / 3) - (bu / bb))
+    return u / b
+
+
+def compute_acceleration(bb_force, pole_mass, cart_mass, pole_length, angle, angle_td, angle_tdd):
+    u = bb_force + pole_mass * pole_length * (angle_td ** 2 * sin(angle) - angle_tdd * cos(angle))
+    b = pole_mass + cart_mass
+    return u / b

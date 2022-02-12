@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import numpy as np
 from rl.env import Domain
 import matplotlib.pyplot as plt
@@ -47,10 +46,7 @@ class Gambler(Domain):
 
     def is_current_state_terminal(self):
         units = self.states[-1][0]
-        a = (units <= 0)
-        b = (units >= 100)
-
-        return a or b
+        return (units <= 0) or (units >= 100)
 
     def visualise(self, actor):
         states = np.arange(1, 99 + 1)
