@@ -129,15 +129,6 @@ def successor(state: State, action: Action):
     return state
 
 
-def calculate_reward(state_from, state_to):
-    """
-    Returns a reward associated with the state transition.
-    """
-    # uuh I created this function assuming I would reward success, but I think
-    # it makes more sense to just penalize actions in general. Just return -1
-    # regardless.
-    return -1
-
 
 class TowersOfHanoi(Domain):
 
@@ -145,11 +136,15 @@ class TowersOfHanoi(Domain):
         self,
         num_pegs,
         num_disks,
+        reward_success,
+        reward_default,
         show_states_during_visualization=False,
         save_states_during_visualization=False,
     ):
         self.num_pegs = num_pegs
         self.num_disks = num_disks
+        self.reward_success = reward_success
+        self.reward_default = reward_default
         self.show_states_during_visualization = show_states_during_visualization
         self.save_states_during_visualization = save_states_during_visualization
 
@@ -183,8 +178,16 @@ class TowersOfHanoi(Domain):
             successor(self.states[-1], action)
         )
 
-        reward = calculate_reward(self.states[-2], self.states[-1])
+        reward = self.calculate_reward(self.states[-2], self.states[-1])
         return *self.get_current_state(), reward
+
+    def calculate_reward(self, state_from, state_to):
+        """
+        Returns a reward associated with the state transition.
+        """
+        if is_success(state_to):
+            return self.reward_success
+        return self.reward_default
 
     def is_current_state_terminal(self):
         return is_success(self.states[-1])
