@@ -1,0 +1,17 @@
+{
+  "problem": "gambler",
+  "problem_params": {
+    "win_prob": 0.5
+  },
+  "episodes": 3000,
+  "steps": 300,
+  "critic_type": "table",
+  "critic_nn_dims": [16, 8],
+  "actor_lr": 0.1,
+  "critic_lr": 0.1,
+  "decay": 0.9,
+  "discount": 0.8,
+  "epsilon": 0.2,
+  "epsilon_decay": 0.995,
+  "visualise": [499, 999, 1999, 2999]
+}

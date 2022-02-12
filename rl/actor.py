@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from matplotlib import pyplot as plt
 
 from rl.utils import DefaultValueTable
 
@@ -33,6 +34,8 @@ class TableBasedActor:
         :param
         :return: an action
         """
+        if len(actions) == 0:
+            return None
         state_id = hash(tuple(state))
         if np.random.choice(np.array([0, 1]), p=[1 - self.epsilon, self.epsilon]) == 1:
             return np.random.choice(np.array(actions))
