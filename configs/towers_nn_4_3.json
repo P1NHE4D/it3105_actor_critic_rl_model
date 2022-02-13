@@ -3,18 +3,18 @@
   "problem_params": {
     "num_disks": 4,
     "num_pegs": 3,
-    "reward_success": 100,
-    "reward_default": -1
+    "reward_success": 10,
+    "reward_default": -100
   },
-  "episodes": 100,
-  "steps": 100,
+  "episodes": 300,
+  "steps": 300,
   "critic_type": "nn",
-  "critic_nn_dims": [8],
-  "actor_lr": 0.05,
-  "critic_lr": 0.01,
+  "critic_nn_dims": [3],
+  "actor_lr": 0.1,
+  "critic_lr": 0.03,
   "decay": 0.9,
-  "discount": 0.99,
-  "epsilon": 0.3,
+  "discount": 0.95,
+  "epsilon": 0.2,
   "epsilon_decay": 0.99,
-  "visualise": [49,99,249,499]
+  "visualise": [299]
 }
