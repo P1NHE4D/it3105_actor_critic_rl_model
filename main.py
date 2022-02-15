@@ -20,7 +20,7 @@ def main():
     elif config['problem'] == 'towers':
         problem = TowersOfHanoi(**config['problem_params'])
     elif config['problem'] == 'pole':
-        problem = PoleBalancing(**config['problem_params'])
+        problem = PoleBalancing(config['problem_params'])
     elif config['problem'] == 'gambler':
         problem = Gambler(**config['problem_params'])
     else:
@@ -28,9 +28,6 @@ def main():
 
     acm = ACM(config)
     acm.fit(problem)
-    # acm.fit(PoleBalancing(config["pole_balancing"]))
-    # acm.fit(TowersOfHanoi())
-    # acm.fit(Gambler())
 
 
 if __name__ == '__main__':
