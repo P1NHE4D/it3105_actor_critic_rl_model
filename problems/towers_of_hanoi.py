@@ -1,4 +1,8 @@
+import time
+
 import numpy as np
+from matplotlib import pyplot as plt
+from prompt_toolkit.data_structures import Size
 
 from rl.env import Domain
 from dataclasses import dataclass
@@ -139,9 +143,10 @@ def calculate_reward(state_from, state_to):
 
 class TowersOfHanoi(Domain):
 
-    def __init__(self, num_pegs, num_disks):
+    def __init__(self, num_pegs, num_disks, show_states_during_visualization=False):
         self.num_pegs = num_pegs
         self.num_disks = num_disks
+        self.show_states_during_visualization = show_states_during_visualization
 
         # to be set  by produce_initial_state
         self.states = None
@@ -172,10 +177,68 @@ class TowersOfHanoi(Domain):
         return is_success(self.states[-1])
 
     def visualise(self, actor):
-        # TODO matplotlib :)
-        for i, state in enumerate(self.states):
-            print(f"state {i}:")
-            for peg in state.pegs:
-                print(" " + str(peg.disks))
-            print()
-        print(f"solved the problem in {len(self.states) - 1} moves")
+        visualize_states(self.states, self.show_states_during_visualization)
+
+
+def visualize_state(state : State):
+    low, high = 0.2, 0.8
+    peg_xs = np.linspace(low, high, len(state.pegs))
+    peg_width = (high - low) / (len(state.pegs))
+    num_disks = np.sum([len(peg.disks) for peg in state.pegs])
+    height_ys = np.linspace(low, high, num_disks)
+
+    fig, ax = plt.subplots()
+    for i, peg in enumerate(state.pegs):
+        for j, disk in enumerate(reversed(peg.disks)):
+            disk_diameter = np.interp(
+                disk.Size,
+                [0, num_disks],
+                [peg_width/2, peg_width],
+            )
+            ax.add_patch(plt.Circle(
+                (peg_xs[i], height_ys[j]),
+                disk_diameter,
+                color='g',
+                clip_on=False
+            ))
+
+    return fig
+
+def visualize_states(states : list[State], show=True):
+    prefix = str(time.time())
+    for i, state in enumerate(states):
+        visualize_state(state)
+        plt.title(f"STEP {i}")
+        # save figure to disk
+        plt.savefig(f'./plots/{prefix}_step_{i}.png')
+        if show:
+            # user wants popup. do that
+            plt.show()
+
+
+if __name__ == '__main__':
+    # if ran directly, show that visualization of an episode works
+
+    # let states be a sequence of states showing the optimal solution to the 3x3 problem
+    states = [
+        State(
+            pegs=[
+                Peg(disks=[
+                    Disk(Size=0),
+                    Disk(Size=1),
+                    Disk(Size=2),
+                ]),
+                Peg(disks=[]),
+                Peg(disks=[]),
+            ]
+        )
+    ]
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=1)))
+    states.append(successor(states[-1], Action(popFrom=2, pushTo=1)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=1, pushTo=0)))
+    states.append(successor(states[-1], Action(popFrom=1, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+
+    visualize_states(states)

@@ -2,7 +2,8 @@
   "problem": "towers",
   "problem_params": {
     "num_disks": 3,
-    "num_pegs": 3
+    "num_pegs": 3,
+    "show_states_during_visualization": true
   },
   "episodes": 3000,
   "steps": 40,
@@ -14,5 +15,5 @@
   "discount": 0.9,
   "epsilon": 0.2,
   "epsilon_decay": 0.999,
-  "visualise": [1, 99, 199, 299, 1000]
+  "visualise": [2999]
 }
