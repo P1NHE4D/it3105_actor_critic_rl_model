@@ -120,6 +120,7 @@ class ACM:
             current_action = self.actor.propose_action(current_state, actions)
             current_state, actions, reward = domain.get_child_state(current_action)
 
+        print(f"FINAL EPISODE WITH EPSILON 0 TOOK {steps} STEPS")
         domain.visualise(self.actor)
 
         # revert epsilon to its original value
