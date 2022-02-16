@@ -2,7 +2,9 @@
   "problem": "towers",
   "problem_params": {
     "num_disks": 3,
-    "num_pegs": 3
+    "num_pegs": 3,
+    "reward_success": 10,
+    "reward_default": -10
   },
   "episodes": 20,
   "steps": 60,

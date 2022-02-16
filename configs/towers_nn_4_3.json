@@ -4,7 +4,9 @@
     "num_disks": 4,
     "num_pegs": 3,
     "reward_success": 10,
-    "reward_default": -100
+    "reward_default": -100,
+    "save_states_during_visualization": false,
+    "show_states_during_visualization": false
   },
   "episodes": 300,
   "steps": 300,
