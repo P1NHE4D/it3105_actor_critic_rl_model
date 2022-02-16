@@ -47,7 +47,10 @@ class ACM:
 
             # get initial state and action
             current_state, actions = domain.get_init_state()
-            current_action = self.actor.propose_action(current_state, actions)
+            if episode_count == 0:
+                current_action = np.random.choice(np.array(actions))
+            else:
+                current_action = self.actor.propose_action(current_state, actions)
 
             # initialise an empty episode
             episode = []
