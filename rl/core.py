@@ -20,21 +20,21 @@ class ACM:
         self.epsilon_decay = config["epsilon_decay"]
         self.visualise = config["visualise"]
 
+        self.actor = TableBasedActor(
+            learning_rate=self.actor_lr,
+            epsilon=self.epsilon
+        )
+        if self.critic_type == "table":
+            self.critic = TableBasedCritic(self.critic_lr)
+        else:
+            self.critic = NNBasedCritic(self.critic_lr, self.critic_nn_dims)
+
     def fit(self, domain: Domain):
         """
         learns the target policy for a given domain
 
         :param domain: domain object for which the target policy should be learned
         """
-        actor = TableBasedActor(
-            learning_rate=self.actor_lr,
-            epsilon=self.epsilon
-        )
-        if self.critic_type == "table":
-            critic = TableBasedCritic(self.critic_lr)
-        else:
-            critic = NNBasedCritic(self.critic_lr, self.critic_nn_dims)
-
         # used for the progressbar only
         steps_per_episode = []
 
@@ -42,12 +42,12 @@ class ACM:
         for episode_count in progress:
 
             # reset actor and critic
-            actor.reset()
-            critic.reset()
+            self.actor.reset()
+            self.critic.reset()
 
             # get initial state and action
             current_state, actions = domain.get_init_state()
-            current_action = actor.propose_action(current_state, actions)
+            current_action = self.actor.propose_action(current_state, actions)
 
             # initialise an empty episode
             episode = []
@@ -64,32 +64,32 @@ class ACM:
                 successor_state, actions, reinforcement = domain.get_child_state(current_action)
 
                 # determine the best action from the successor based on the current policy
-                successor_action = actor.propose_action(state=successor_state, actions=actions)
+                successor_action = self.actor.propose_action(state=successor_state, actions=actions)
 
                 # increase the eligibility of the current state
-                actor.increase_eligibility(current_state, current_action)
+                self.actor.increase_eligibility(current_state, current_action)
 
                 # compute the td error using the current and the successor state
-                td_error = critic.compute_td_error(
+                td_error = self.critic.compute_td_error(
                     state=current_state,
                     successor_state=successor_state,
                     reinforcement=reinforcement,
                     discount_rate=self.discount_rate
                 )
-                critic.increase_eligibility(current_state)
+                self.critic.increase_eligibility(current_state)
 
                 # update the value function, eligibilities, and the policy for each state of the current episode
-                critic.update_value_function(episode=episode)
-                critic.update_eligibilities(episode=episode, discount_rate=self.discount_rate,decay_factor=self.decay_factor)
-                actor.update_policy(episode=episode, td_error=td_error)
-                actor.update_eligibilities(episode=episode, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
+                self.critic.update_value_function(episode=episode)
+                self.critic.update_eligibilities(episode=episode, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
+                self.actor.update_policy(episode=episode, td_error=td_error)
+                self.actor.update_eligibilities(episode=episode, discount_rate=self.discount_rate, decay_factor=self.decay_factor)
 
                 current_state = successor_state
                 current_action = successor_action
 
             self.epsilon *= self.epsilon_decay
             if any(map(lambda x: x == episode_count, self.visualise)):
-                domain.visualise(actor)
+                domain.visualise(self.actor)
 
             # update progressbar
 
@@ -102,5 +102,22 @@ class ACM:
                 f"avg:{np.mean(steps_per_episode):.3f})] "
             )
 
-    def predict(self):
-        pass
+    def predict(self, domain : Domain):
+        # get initial state and action
+        current_state, actions = domain.get_init_state()
+
+        # temporarily set actor epsilon to 0
+        original_epsilon = self.actor.epsilon
+        self.actor.epsilon = 0
+
+        steps = 0
+        while steps < self.steps and not domain.is_current_state_terminal():
+            steps += 1
+            current_action = self.actor.propose_action(current_state, actions)
+            current_state, actions, reward = domain.get_child_state(current_action)
+
+        print(f"FINAL EPISODE WITH EPSILON 0 TOOK {steps} STEPS")
+        domain.visualise(self.actor)
+
+        # revert epsilon to its original value
+        self.actor.epsilon = original_epsilon

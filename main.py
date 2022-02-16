@@ -29,6 +29,9 @@ def main():
     acm = ACM(config)
     acm.fit(problem)
 
+    print("Running full episode with epsilon 0")
+    acm.predict(problem)
+
 
 if __name__ == '__main__':
     main()
