@@ -20,16 +20,6 @@ class ACM:
         self.epsilon_decay = config["epsilon_decay"]
         self.visualise = config["visualise"]
 
-        # to be set by fit
-        self.actor = None
-        self.critic = None
-
-    def fit(self, domain: Domain):
-        """
-        learns the target policy for a given domain
-
-        :param domain: domain object for which the target policy should be learned
-        """
         self.actor = TableBasedActor(
             learning_rate=self.actor_lr,
             epsilon=self.epsilon
@@ -39,6 +29,12 @@ class ACM:
         else:
             self.critic = NNBasedCritic(self.critic_lr, self.critic_nn_dims)
 
+    def fit(self, domain: Domain):
+        """
+        learns the target policy for a given domain
+
+        :param domain: domain object for which the target policy should be learned
+        """
         # used for the progressbar only
         steps_per_episode = []
 
