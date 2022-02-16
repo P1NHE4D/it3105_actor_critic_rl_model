@@ -90,9 +90,6 @@ def legal_actions(state: State):
     Generate legal actions in state.
     """
     actions = []
-
-    # TODO this loop is an imperative mutating mess
-
     # for each peg, add an action to move its top disk (if there is one) to
     # each other peg that has a smaller disk (or no disk)
     for idx_from, peg_from in enumerate(state.pegs):

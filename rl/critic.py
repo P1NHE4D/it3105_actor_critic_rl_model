@@ -103,7 +103,6 @@ class NNBasedCritic(Critic):
         return model
 
     def reset(self):
-        # TODO: not optimal - find a better solution
         if len(self.episode) > 0:
             x = tf.convert_to_tensor(list(map(lambda e: e[0], self.episode)))
             y = tf.convert_to_tensor(self.targets)
@@ -124,7 +123,6 @@ class NNBasedCritic(Critic):
         return reinforcement + discount_rate * v_succ - v_curr
 
     def update_value_function(self, episode):
-        # TODO: not optimal - find a better solution
         self.episode = episode
 
     # not required
