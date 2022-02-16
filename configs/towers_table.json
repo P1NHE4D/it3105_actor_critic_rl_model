@@ -1,18 +1,20 @@
 {
   "problem": "towers",
   "problem_params": {
-    "num_disks": 3,
-    "num_pegs": 3
+    "num_disks": 4,
+    "num_pegs": 3,
+    "show_states_during_visualization": false,
+    "save_states_during_visualization": false
   },
-  "episodes": 3000,
-  "steps": 40,
+  "episodes": 200,
+  "steps": 300,
   "critic_type": "table",
   "critic_nn_dims": [16],
-  "actor_lr": 0.2,
-  "critic_lr": 0.2,
-  "decay": 0.9,
-  "discount": 0.9,
-  "epsilon": 0.2,
-  "epsilon_decay": 0.999,
-  "visualise": [1, 99, 199, 299, 1000]
+  "actor_lr": 0.001,
+  "critic_lr": 0.1,
+  "decay": 0.8,
+  "discount": 0.99,
+  "epsilon": 0.05,
+  "epsilon_decay": 0.99,
+  "visualise": [99, 199]
 }
