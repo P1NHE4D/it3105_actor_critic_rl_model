@@ -21,12 +21,12 @@
   "episodes": 250,
   "steps": 400,
   "critic_type": "nn",
-  "critic_nn_dims": [8],
+  "critic_nn_dims": [16, 8],
   "actor_lr": 0.1,
   "critic_lr": 0.01,
   "decay": 0.9,
   "discount": 0.9,
-  "epsilon": 0.1,
+  "epsilon": 0.05,
   "epsilon_decay": 0.99,
   "visualise": [49, 99, 199, 249]
 }

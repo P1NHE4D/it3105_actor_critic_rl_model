@@ -152,6 +152,7 @@ class TowersOfHanoi(Domain):
         self.states = []
         self.episode_count = 0
         self.state_counts = []
+        self.avg_state_count = []
 
     def get_current_state(self):
         return self.states[-1].vector(), legal_actions(self.states[-1])
@@ -161,6 +162,7 @@ class TowersOfHanoi(Domain):
         if len(self.states) > 0:
             self.episode_count += 1
             self.state_counts.append(len(self.states))
+            self.avg_state_count.append(np.mean(self.state_counts))
 
         # prepare initial state as one where all disks are on the first peg,
         # with smaller disks atop larger disks
@@ -186,7 +188,7 @@ class TowersOfHanoi(Domain):
         Returns a reward associated with the state transition.
         """
         if is_success(state_to):
-            return self.reward_success
+            return (1 / len(self.states)) * self.reward_success
         return self.reward_default
 
     def is_current_state_terminal(self):
@@ -194,6 +196,7 @@ class TowersOfHanoi(Domain):
 
     def visualise(self, actor):
         plt.plot(np.arange(0, self.episode_count), self.state_counts)
+        plt.plot(np.arange(0, self.episode_count), self.avg_state_count)
         plt.xlabel("Episode")
         plt.ylabel("Steps")
         plt.show()

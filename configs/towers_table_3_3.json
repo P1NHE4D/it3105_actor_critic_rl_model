@@ -1,10 +1,10 @@
 {
   "problem": "towers",
   "problem_params": {
-    "num_disks": 4,
+    "num_disks": 3,
     "num_pegs": 3,
     "reward_success": 10,
-    "reward_failure": -10,
+    "reward_default": -10,
     "show_states_during_visualization": false,
     "save_states_during_visualization": false
   },
