@@ -3,7 +3,8 @@
   "problem_params": {
     "num_disks": 4,
     "num_pegs": 3,
-    "show_states_during_visualization": true
+    "show_states_during_visualization": false,
+    "save_states_during_visualization": false
   },
   "episodes": 200,
   "steps": 300,

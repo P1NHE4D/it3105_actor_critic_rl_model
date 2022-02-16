@@ -141,10 +141,17 @@ def calculate_reward(state_from, state_to):
 
 class TowersOfHanoi(Domain):
 
-    def __init__(self, num_pegs, num_disks, show_states_during_visualization=False):
+    def __init__(
+        self,
+        num_pegs,
+        num_disks,
+        show_states_during_visualization=False,
+        save_states_during_visualization=False,
+    ):
         self.num_pegs = num_pegs
         self.num_disks = num_disks
         self.show_states_during_visualization = show_states_during_visualization
+        self.save_states_during_visualization = save_states_during_visualization
 
         # to be set  by produce_initial_state
         self.states = []
@@ -188,7 +195,7 @@ class TowersOfHanoi(Domain):
         plt.ylabel("Steps")
         plt.show()
 
-        visualize_states(self.states, self.show_states_during_visualization)
+        visualize_states(self.states, self.show_states_during_visualization, self.save_states_during_visualization)
 
 
 def visualize_state(state: State):
@@ -216,18 +223,23 @@ def visualize_state(state: State):
     return fig
 
 
-def visualize_states(states: list[State], show=True):
+def visualize_states(states: list[State], show=True, save=True):
     prefix = str(time.time())
     Path("./plots").mkdir(parents=True, exist_ok=True)
     for i, state in enumerate(states):
-        visualize_state(state)
+        fig = visualize_state(state)
         plt.title(f"STEP {i}")
         # save figure to disk
-        plt.savefig(f'./plots/{prefix}_step_{i}.png')
+        if save:
+            plt.savefig(f'./plots/{prefix}_step_{i}.png')
+
         if show:
             # user wants popup. do that
             plt.show()
-
+        else:
+            # force matplotlib to not show the figures..
+            # this makes the learning process halt for around a second for some reason
+            plt.close()
 
 if __name__ == '__main__':
     # if ran directly, show that visualization of an episode works
