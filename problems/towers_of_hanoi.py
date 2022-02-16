@@ -63,7 +63,6 @@ class State:
         return ohe
 
 
-
 @dataclass
 class Action:
     """
@@ -180,7 +179,7 @@ class TowersOfHanoi(Domain):
         visualize_states(self.states, self.show_states_during_visualization)
 
 
-def visualize_state(state : State):
+def visualize_state(state: State):
     low, high = 0.2, 0.8
     peg_xs = np.linspace(low, high, len(state.pegs))
     peg_width = (high - low) / (len(state.pegs))
@@ -193,7 +192,7 @@ def visualize_state(state : State):
             disk_diameter = np.interp(
                 disk.Size,
                 [0, num_disks],
-                [peg_width/2, peg_width],
+                [peg_width / 2, peg_width],
             )
             ax.add_patch(plt.Circle(
                 (peg_xs[i], height_ys[j]),
@@ -204,7 +203,8 @@ def visualize_state(state : State):
 
     return fig
 
-def visualize_states(states : list[State], show=True):
+
+def visualize_states(states: list[State], show=True):
     prefix = str(time.time())
     for i, state in enumerate(states):
         visualize_state(state)
