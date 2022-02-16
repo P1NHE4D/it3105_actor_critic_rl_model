@@ -2,11 +2,10 @@ import time
 
 import numpy as np
 from matplotlib import pyplot as plt
-from prompt_toolkit.data_structures import Size
-
 from rl.env import Domain
 from dataclasses import dataclass
 from copy import deepcopy
+from pathlib import Path
 
 
 # Notice that @dataclass means we'll get an __eq__ for free that is based on
@@ -148,14 +147,22 @@ class TowersOfHanoi(Domain):
         self.show_states_during_visualization = show_states_during_visualization
 
         # to be set  by produce_initial_state
-        self.states = None
+        self.states = []
+        self.episode_count = 0
+        self.state_counts = []
 
     def get_current_state(self):
         return self.states[-1].vector(), legal_actions(self.states[-1])
 
     def get_init_state(self):
+        # for visualization purposes
+        if len(self.states) > 0:
+            self.episode_count += 1
+            self.state_counts.append(len(self.states))
+
         # prepare initial state as one where all disks are on the first peg,
         # with smaller disks atop larger disks
+
         disks = [Disk(Size=s) for s in list(range(self.num_disks))]
         firstPeg = Peg(disks=disks)
         restPegs = [Peg(disks=[]) for _ in range(self.num_pegs - 1)]
@@ -176,6 +183,11 @@ class TowersOfHanoi(Domain):
         return is_success(self.states[-1])
 
     def visualise(self, actor):
+        plt.plot(np.arange(0, self.episode_count), self.state_counts)
+        plt.xlabel("Episode")
+        plt.ylabel("Steps")
+        plt.show()
+
         visualize_states(self.states, self.show_states_during_visualization)
 
 
@@ -206,6 +218,7 @@ def visualize_state(state: State):
 
 def visualize_states(states: list[State], show=True):
     prefix = str(time.time())
+    Path("./plots").mkdir(parents=True, exist_ok=True)
     for i, state in enumerate(states):
         visualize_state(state)
         plt.title(f"STEP {i}")

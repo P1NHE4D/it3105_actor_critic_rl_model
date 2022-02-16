@@ -15,5 +15,5 @@
   "discount": 0.99,
   "epsilon": 0.05,
   "epsilon_decay": 0.99,
-  "visualise": [99, 199, 299, 999, 2999]
+  "visualise": [99, 199]
 }
