@@ -1,32 +1,20 @@
 {
-  "problem": "pole",
+  "problem": "towers",
   "problem_params": {
-    "cart_mass": 1,
-    "pole_mass": 0.1,
-    "pole_length": 0.5,
-    "force": 10,
-    "gravity": -9.8,
-    "timestep": 0.02,
-    "angle_magnitude": 0.21,
-    "left_boundary": -2.4,
-    "right_boundary": 2.4,
-    "max_timesteps": 300,
-    "bins": {
-      "velocity": [-3, 3, 6],
-      "location": [-3, 3, 6],
-      "angle": [-0.3, 0.3, 8],
-      "angle_td": [-4, 4, 8]
-    }
+    "num_disks": 4,
+    "num_pegs": 3,
+    "reward_success": 1000,
+    "reward_default": -1
   },
-  "episodes": 250,
-  "steps": 400,
+  "episodes": 500,
+  "steps": 300,
   "critic_type": "nn",
-  "critic_nn_dims": [8],
-  "actor_lr": 0.1,
-  "critic_lr": 0.01,
+  "critic_nn_dims": [256],
+  "actor_lr": 0.01,
+  "critic_lr": 0.001,
   "decay": 0.9,
-  "discount": 0.9,
-  "epsilon": 0.1,
-  "epsilon_decay": 0.99,
-  "visualise": [49, 99, 199, 249]
+  "discount": 0.99,
+  "epsilon": 0.05,
+  "epsilon_decay": 0.999,
+  "visualise": [199, 299, 499]
 }

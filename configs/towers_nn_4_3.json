@@ -9,7 +9,7 @@
   "episodes": 500,
   "steps": 300,
   "critic_type": "nn",
-  "critic_nn_dims": [128, 64, 32, 16, 8],
+  "critic_nn_dims": [256],
   "actor_lr": 0.01,
   "critic_lr": 0.001,
   "decay": 0.9,
