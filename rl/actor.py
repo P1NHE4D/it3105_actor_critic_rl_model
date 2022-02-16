@@ -42,7 +42,7 @@ class TableBasedActor:
         best_action = None
         max_value = -math.inf
         for action in actions:
-            state_value = self.policy[(state_id, action)] / len(actions)
+            state_value = self.policy[(state_id, action)]
             if state_value > max_value:
                 best_action = action
                 max_value = state_value
