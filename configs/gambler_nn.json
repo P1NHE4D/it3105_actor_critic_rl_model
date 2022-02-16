@@ -3,7 +3,7 @@
   "problem_params": {
     "win_prob": 0.4
   },
-  "episodes": 100,
+  "episodes": 300,
   "steps": 100,
   "critic_type": "nn",
   "critic_nn_dims": [8],
@@ -13,5 +13,5 @@
   "discount": 0.8,
   "epsilon": 0.2,
   "epsilon_decay": 0.995,
-  "visualise": [49, 99]
+  "visualise": [99, 199, 299]
 }

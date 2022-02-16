@@ -1,8 +1,11 @@
-import numpy as np
+import time
 
+import numpy as np
+from matplotlib import pyplot as plt
 from rl.env import Domain
 from dataclasses import dataclass
 from copy import deepcopy
+from pathlib import Path
 
 
 # Notice that @dataclass means we'll get an __eq__ for free that is based on
@@ -57,7 +60,6 @@ class State:
                 # encode peg placement
                 ohe[ohe_disk_pos + curr_peg_i] = 1
         return ohe
-
 
 
 @dataclass
@@ -127,31 +129,42 @@ def successor(state: State, action: Action):
     return state
 
 
-def calculate_reward(state_from, state_to):
-    """
-    Returns a reward associated with the state transition.
-    """
-    # uuh I created this function assuming I would reward success, but I think
-    # it makes more sense to just penalize actions in general. Just return -1
-    # regardless.
-    return -1
-
 
 class TowersOfHanoi(Domain):
 
-    def __init__(self, num_pegs, num_disks):
+    def __init__(
+        self,
+        num_pegs,
+        num_disks,
+        reward_success,
+        reward_default,
+        show_states_during_visualization=False,
+        save_states_during_visualization=False,
+    ):
         self.num_pegs = num_pegs
         self.num_disks = num_disks
+        self.reward_success = reward_success
+        self.reward_default = reward_default
+        self.show_states_during_visualization = show_states_during_visualization
+        self.save_states_during_visualization = save_states_during_visualization
 
         # to be set  by produce_initial_state
-        self.states = None
+        self.states = []
+        self.episode_count = 0
+        self.state_counts = []
 
     def get_current_state(self):
         return self.states[-1].vector(), legal_actions(self.states[-1])
 
     def get_init_state(self):
+        # for visualization purposes
+        if len(self.states) > 0:
+            self.episode_count += 1
+            self.state_counts.append(len(self.states))
+
         # prepare initial state as one where all disks are on the first peg,
         # with smaller disks atop larger disks
+
         disks = [Disk(Size=s) for s in list(range(self.num_disks))]
         firstPeg = Peg(disks=disks)
         restPegs = [Peg(disks=[]) for _ in range(self.num_pegs - 1)]
@@ -165,17 +178,95 @@ class TowersOfHanoi(Domain):
             successor(self.states[-1], action)
         )
 
-        reward = calculate_reward(self.states[-2], self.states[-1])
+        reward = self.calculate_reward(self.states[-2], self.states[-1])
         return *self.get_current_state(), reward
+
+    def calculate_reward(self, state_from, state_to):
+        """
+        Returns a reward associated with the state transition.
+        """
+        if is_success(state_to):
+            return self.reward_success
+        return self.reward_default
 
     def is_current_state_terminal(self):
         return is_success(self.states[-1])
 
     def visualise(self, actor):
-        # TODO matplotlib :)
-        for i, state in enumerate(self.states):
-            print(f"state {i}:")
-            for peg in state.pegs:
-                print(" " + str(peg.disks))
-            print()
-        print(f"solved the problem in {len(self.states) - 1} moves")
+        plt.plot(np.arange(0, self.episode_count), self.state_counts)
+        plt.xlabel("Episode")
+        plt.ylabel("Steps")
+        plt.show()
+
+        visualize_states(self.states, self.show_states_during_visualization, self.save_states_during_visualization)
+
+
+def visualize_state(state: State):
+    low, high = 0.2, 0.8
+    peg_xs = np.linspace(low, high, len(state.pegs))
+    peg_width = (high - low) / (len(state.pegs))
+    num_disks = np.sum([len(peg.disks) for peg in state.pegs])
+    height_ys = np.linspace(low, high, num_disks)
+
+    fig, ax = plt.subplots()
+    for i, peg in enumerate(state.pegs):
+        for j, disk in enumerate(reversed(peg.disks)):
+            disk_diameter = np.interp(
+                disk.Size,
+                [0, num_disks],
+                [peg_width / 2, peg_width],
+            )
+            ax.add_patch(plt.Circle(
+                (peg_xs[i], height_ys[j]),
+                disk_diameter,
+                color='g',
+                clip_on=False
+            ))
+
+    return fig
+
+
+def visualize_states(states: list[State], show=True, save=True):
+    prefix = str(time.time())
+    Path("./plots").mkdir(parents=True, exist_ok=True)
+    for i, state in enumerate(states):
+        fig = visualize_state(state)
+        plt.title(f"STEP {i}")
+        # save figure to disk
+        if save:
+            plt.savefig(f'./plots/{prefix}_step_{i}.png')
+
+        if show:
+            # user wants popup. do that
+            plt.show()
+        else:
+            # force matplotlib to not show the figures..
+            # this makes the learning process halt for around a second for some reason
+            plt.close()
+
+if __name__ == '__main__':
+    # if ran directly, show that visualization of an episode works
+
+    # let states be a sequence of states showing the optimal solution to the 3x3 problem
+    states = [
+        State(
+            pegs=[
+                Peg(disks=[
+                    Disk(Size=0),
+                    Disk(Size=1),
+                    Disk(Size=2),
+                ]),
+                Peg(disks=[]),
+                Peg(disks=[]),
+            ]
+        )
+    ]
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=1)))
+    states.append(successor(states[-1], Action(popFrom=2, pushTo=1)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=1, pushTo=0)))
+    states.append(successor(states[-1], Action(popFrom=1, pushTo=2)))
+    states.append(successor(states[-1], Action(popFrom=0, pushTo=2)))
+
+    visualize_states(states)

@@ -118,8 +118,8 @@ class NNBasedCritic(Critic):
     def compute_td_error(self, state, successor_state, reinforcement, discount_rate):
         current_state = tf.convert_to_tensor([state])
         successor_state = tf.convert_to_tensor([successor_state])
-        v_succ = self.model(successor_state)[0, 0]
         v_curr = self.model(current_state)[0, 0]
+        v_succ = self.model(successor_state)[0, 0]
         self.targets.append(reinforcement + discount_rate * v_succ)
         return reinforcement + discount_rate * v_succ - v_curr
 
